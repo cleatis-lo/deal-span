@@ -94,7 +94,8 @@ export function answerModel(S, D, R) {
     confidence: pc.confidence, count: pc.count, considered: pc.considered, enough: pc.count >= 3,
     industry: v.ind.label, benchMult: v.bench.mult, publicMult: e.adjusted > 0 ? v.pub.mid / e.adjusted : NaN, minScore: A.minCompScore,
     deals: pc.deals.map(d => ({ target: d.target, acquirer: d.acquirer, year: String(d.date).slice(0, 4), ev: d.ev, revenue: d.revenue, ebitda: d.ebitda,
-      multiple: d.multiple, score: d.score, reasons: d.reasons, source: d.source, notes: d.notes }))
+      multiple: d.multiple, score: d.score, source: d.source, notes: d.notes,
+      reasons: d.currencyOriginal ? [...d.reasons, `${d.currencyOriginal} deal, shown in US$`] : d.reasons }))
   };
 
   // 3. How you'd pay for it (at the asking price).

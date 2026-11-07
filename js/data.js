@@ -49,6 +49,11 @@ export const ADDBACK_TESTS = {
   other: "GL detail and a written explanation of why it won't recur."
 };
 
+// Approximate US dollars per unit of foreign currency (rounded 2023–2026 averages; assumption).
+// Foreign-currency deals are converted to US dollars when the deal file loads, so size
+// comparisons are like-for-like. Price ÷ profit multiples are unaffected by the conversion.
+export const FX_TO_USD = { USD: 1, CAD: 0.74, GBP: 1.27, EUR: 1.08, AUD: 0.66 };
+
 export const DEFAULTS = {
   marketOwnerSalary: 125000,  // Pioneer: $100–150K replacement comp
   baseRate: 0.0675,           // prime; verify before demo

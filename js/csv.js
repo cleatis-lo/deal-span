@@ -1,5 +1,5 @@
 // CSV parsing + precedent row validation. Pure functions, no DOM.
-import { INDUSTRIES } from "./data.js";
+import { INDUSTRIES, FX_TO_USD } from "./data.js";
 
 export function parseCSV(text) {
   const rows = [];
@@ -52,7 +52,10 @@ export function rowsToPrecedents(rows) {
       ebitdaDerived: /^y/i.test(g("ebitda_derived")),
       isSample: /sample/i.test(g("source")) || /^sample/i.test(g("target"))
     };
-    const why = !ids.has(d.industry) ? "unknown industry" : !(d.ev > 0) ? "missing EV" :
+    // Convert to US dollars so deal sizes compare like-for-like; keep the original currency for display.
+    const fx = FX_TO_USD[d.currency.toUpperCase()];
+    if (fx && fx !== 1) { d.fxRate = fx; d.currencyOriginal = d.currency; d.ev *= fx; d.revenue *= fx; d.ebitda *= fx; d.currency = "USD"; }
+    const why = !ids.has(d.industry) ? "unknown industry" : !fx ? `unknown currency ${d.currency}` : !(d.ev > 0) ? "missing EV" :
       !(d.revenue > 0 || d.ebitda > 0) ? "needs revenue or EBITDA" : !/^https?:\/\//.test(d.source) ? "missing source URL" : "";
     if (why) skipped.push(`row ${n + 2} (${d.target || "?"}): ${why}`); else deals.push(d);
   });

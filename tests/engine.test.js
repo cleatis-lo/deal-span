@@ -223,3 +223,16 @@ test("extra cash needed at closing raises the equity check one-for-one", () => {
   close(R.atAsk.equity - base.atAsk.equity, 500000 * DEFAULTS.minEquityPct, 1e-6);
   assert.ok(R.prices.financeableMax < base.prices.financeableMax);
 });
+
+test("foreign-currency deals are converted to US dollars on load; multiples unchanged", () => {
+  const rows = [["industry", "target", "ev", "revenue", "ebitda", "currency", "source"],
+    ["manufacturing", "Maple Co", "10000000", "20000000", "2000000", "CAD", "https://x.test"],
+    ["manufacturing", "Yen Co", "10000000", "0", "2000000", "JPY", "https://x.test"]];
+  const { deals, skipped } = rowsToPrecedents(rows);
+  assert.equal(deals.length, 1);
+  close(deals[0].ev, 7400000, 1e-6);          // C$10M × 0.74
+  close(deals[0].ebitda, 1480000, 1e-6);
+  close(deals[0].ev / deals[0].ebitda, 5, 1e-9);
+  assert.equal(deals[0].currencyOriginal, "CAD");
+  assert.ok(skipped[0].includes("unknown currency"));
+});
