@@ -256,7 +256,7 @@ function step3() {
   </div>
 
   <div class="nav noprint"><button class="btn" data-go="1">← Change answers</button><div class="row"><button class="btn" data-print="1">Print / PDF</button><button class="btn dark" data-xlsx="1">Download Excel</button></div></div>
-  <p class="note">This is a first screen, not a quality-of-earnings report or a valuation opinion. Every number comes from your inputs, a fixed rule, or a public source. No AI is used. <a href="pro.html">Advanced view</a></p>`;
+  <p class="note">This is a first screen, not a quality-of-earnings report or a valuation opinion. Every number comes from your inputs, a fixed rule, or a public source. No AI is used.</p>`;
 }
 
 // ---------- files ----------

@@ -1,29 +1,30 @@
 # DealSpan
 
-**Should you buy this business, and for how much?** DealSpan has two views on one tested engine:
+**Should you buy this business, and for how much?** DealSpan helps small-business owners and first-time buyers screen a business before making an offer. Three plain-English steps:
 
-- **Simple view (`index.html`):** 3 plain-English steps for small-business owners and first-time buyers: the business, about you, your answer (offer up to / walk away above, how you'd pay for it, what could go wrong, what to put in the offer letter). Deals up to $7.5M use SBA 7(a) loan terms (assumptions in `js/simple-map.js`).
-- **Advanced view (`pro.html`):** the full add-on analysis for independent sponsors and small PE platforms.
+1. **The business:** asking price, sales, profit, owner pay, and the seller's adjustments exactly as claimed (type them in or upload the Excel template).
+2. **About you:** your cash, your current business if you have one, and nine click-to-answer risk questions.
+3. **Your answer:** offer up to / walk away above, what the business really earns, what it's worth, how you'd pay for it, what could go wrong, and what to put in the offer letter. Download it to Excel.
 
-**Advanced view:** add-on deal diligence for independent sponsors and small PE platforms. Upload a target's financials and the seller's add-backs, add a short profile of your platform, and DealSpan tells you what the target really earns, what it's worth on its own and inside your platform, how much debt the combined company can carry, and the most you should bid.
+Where it fits: after you get the seller's numbers and before you sign an offer letter (LOI). It is a first screen, not a quality-of-earnings report or a valuation opinion.
 
 Built by RedHaek for a 24-hour fintech hackathon.
 
-## How it works
+## How the numbers work
 
-1. **Setup:** fill the Excel template (download it in the app) or type the numbers in.
-2. **Real earnings:** every seller add-back gets a rule-based acceptance rate (run-rate contracts 25%, one-time items 75%, and so on). Owner pay above a market GM salary is added back.
-3. **Value & deal:** standalone value from sourced precedent deals and small-deal benchmarks, with public comps shown off to the side as the "size trap"; synergies cut back with Bain/McKinsey base rates; combined leverage and fixed-charge coverage with a +300bp stress.
-4. **Memo:** *Bid up to* (standalone value), *walk away above* (standalone + at most 50% of synergy value, capped by financing), the top 3 diligence items, a risk scorecard, and an Excel export.
+- **Real earnings:** each seller adjustment gets a fixed acceptance rule (income not yet earned 25%, one-time items 75%, one-time items claimed two years running 0%, and so on). Owner pay above a $125K manager salary is added back.
+- **Value:** comparable deals with public prices plus small-deal benchmarks. Public-company multiples are shown only as a warning.
+- **Pricing rules:** *Offer up to* = what the business is worth on its own. *Walk away above* = that value plus at most half the value of your expected savings from combining. Both are capped at what you can finance.
+- **Financing:** deals up to $7.5M use SBA 7(a) terms ($5M loan cap, about 10 years, 10% down); larger deals use a conventional bank loan. Coverage is stress-tested with a +3% rate rise.
 
 ## Trust
 
-- **No AI at runtime.** The engine (`js/engine.js`) is pure, deterministic functions.
-- **Every rule is visible** in the Assumptions panel, and sourced figures link to their source.
-- **Every formula is tested:** `npm test` (Node 20+) checks the demo case against hand-computed values in `tests/engine.test.js`, plus an Excel template round-trip.
+- **No AI at runtime.** `js/engine.js` is pure, deterministic functions.
+- **Every formula is tested:** `npm test` (Node 20+) checks the examples against hand-computed values.
+- Rules and assumptions are labeled in `js/data.js` and `js/simple-map.js`; sourced figures link to their source.
 - Precedent deals (`data/precedent_transactions.csv`) are public deals, each with a source link. Regenerate `js/precedents.js` with `npm run build:precedents`.
 
-DealSpan is a pre-LOI screen, not a quality-of-earnings report or a valuation opinion. The demo companies are fictional.
+The example companies are fictional.
 
 ## Run locally
 
