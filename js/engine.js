@@ -158,7 +158,9 @@ export function structureAt(price, ctx, rateBump = 0) {
   const capLeverage = A.maxSeniorLeverage * cf.pfEbitda;
   const capCoverage = Math.max(0, (cf.cfads / A.minFCCR - sellerDS) / (rate + A.amortPct));
   const capTotal = Math.min(capLeverage, capCoverage);
-  const incrementalCapacity = Math.max(0, capTotal - existing);
+  // Optional cap on the new loan itself (e.g. SBA 7(a) maximum). Undefined = no cap.
+  const newLoanCap = isFinite(A.maxNewLoan) ? A.maxNewLoan : Infinity;
+  const incrementalCapacity = Math.max(0, Math.min(capTotal - existing, newLoanCap));
   const minEquity = uses * A.minEquityPct;
   const need = Math.max(0, uses - sellerNote - minEquity); // debt needed if the sponsor puts in only the minimum
   const incremental = Math.min(incrementalCapacity, need);
@@ -174,7 +176,7 @@ export function structureAt(price, ctx, rateBump = 0) {
     seniorLeverage: seniorTotal / cf.pfEbitda,
     totalLeverage: (seniorTotal + sellerNote) / cf.pfEbitda,
     minEquity,
-    binding: incrementalCapacity >= need ? "minimum equity rule" : capLeverage <= capCoverage ? "senior leverage cap" : "coverage covenant",
+    binding: incrementalCapacity >= need ? "minimum equity rule" : (capTotal - existing) > newLoanCap ? "loan size cap" : capLeverage <= capCoverage ? "senior leverage cap" : "coverage covenant",
     equityPct: uses > 0 ? equity / uses : 0
   };
 }

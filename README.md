@@ -1,6 +1,11 @@
 # DealSpan
 
-**Add-on deal diligence for independent sponsors and small PE platforms.** Upload a target's financials and the seller's add-backs, add a short profile of your platform, and DealSpan tells you what the target really earns, what it's worth on its own and inside your platform, how much debt the combined company can carry, and the most you should bid.
+**Should you buy this business, and for how much?** DealSpan has two views on one tested engine:
+
+- **Simple view (`index.html`):** 3 plain-English steps for small-business owners and first-time buyers: the business, about you, your answer (offer up to / walk away above, how you'd pay for it, what could go wrong, what to put in the offer letter). Deals up to $7.5M use SBA 7(a) loan terms (assumptions in `js/simple-map.js`).
+- **Advanced view (`pro.html`):** the full add-on analysis for independent sponsors and small PE platforms.
+
+**Advanced view:** add-on deal diligence for independent sponsors and small PE platforms. Upload a target's financials and the seller's add-backs, add a short profile of your platform, and DealSpan tells you what the target really earns, what it's worth on its own and inside your platform, how much debt the combined company can carry, and the most you should bid.
 
 Built by RedHaek for a 24-hour fintech hackathon.
 

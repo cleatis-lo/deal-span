@@ -3,29 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DealSpan · Add-on deal diligence</title>
-<meta name="description" content="Deterministic, auditable diligence for independent sponsors and small PE platforms evaluating add-on acquisitions.">
-<link rel="stylesheet" href="css/styles.css">
+<title>DealSpan · Should you buy this business?</title>
+<meta name="description" content="Before you make an offer on a small business: what it really earns, what it's worth, how you'd pay for it, and what could go wrong. No AI; every number is a rule or a cited source.">
+<link rel="stylesheet" href="css/simple.css">
 </head>
 <body>
-<div class="top">
-  <div class="top-inner">
-    <div class="brand"><b>DealSpan</b><span>by RedHaek</span></div>
-    <nav class="steps" id="steps" aria-label="Steps"></nav>
-    <div class="top-actions">
-      <button class="btn quiet" data-act="assumptions">Assumptions</button>
-      <button class="btn quiet" data-act="precedents">Precedents</button>
-    </div>
+<header>
+  <div class="top">
+    <div><div class="logo">Deal<b>Span</b></div><div class="tagline">Should you buy this business, and for how much?</div></div>
+    <div class="r"><a class="btn ghost" href="pro.html">Advanced view</a><button class="btn ghost" data-reset="1">Start over</button></div>
   </div>
-</div>
-<div class="span-wrap" id="span"></div>
-<main id="main"></main>
-<footer class="foot">
-  DealSpan is a pre-LOI screen, not a quality-of-earnings report or a valuation opinion. No AI runs in this product: every number comes from your inputs, a labeled rule, or a cited source.
-  <a href="#" data-act="sources">Sources</a> · <a href="https://github.com/cleatis-lo/deal-span">Code and tests</a>
-</footer>
-<div id="drawer"></div>
+  <div class="timeline" title="Where DealSpan fits in buying a business">
+    <div>1 · Find</div><div class="here">2 · Screen &amp; price ← DealSpan</div><div>3 · Offer (LOI)</div><div>4 · Confirm (QoE)</div><div>5 · Close</div><div>6 · First 100 days</div>
+  </div>
+</header>
+<main>
+  <div class="steps noprint">
+    <button data-step="0">1. The business<span>Seller's numbers</span></button>
+    <button data-step="1">2. About you<span>Your cash and a quick risk check</span></button>
+    <button data-step="2">3. Your answer<span>Price, financing, red flags</span></button>
+  </div>
+  <div id="view"></div>
+</main>
+<div id="toast" class="toast hide"></div>
 <script src="vendor/xlsx.full.min.js"></script>
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/simple.js"></script>
 </body>
 </html>
