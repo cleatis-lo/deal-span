@@ -13,6 +13,12 @@ export const PRECEDENTS = [
   "basis": "Forward (expected 2025)",
   "notes": "Initial price; up to $5M earnout excluded. EBITDA 'over $4M'.",
   "source": "https://www.limbachinc.com/?p=12273",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -28,6 +34,12 @@ export const PRECEDENTS = [
   "basis": "Forward (expected 2025)",
   "notes": "Initial price; up to $2M earnout excluded.",
   "source": "https://www.limbachinc.com/?p=13228",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -43,6 +55,12 @@ export const PRECEDENTS = [
   "basis": "Forward (expected 2026)",
   "notes": "Price includes owned real property (~$4.6M per Limbach).",
   "source": "https://www.nasdaq.com/press-release/limbach-acquires-pioneer-power-2025-07-01",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -58,6 +76,12 @@ export const PRECEDENTS = [
   "basis": "Forward (expected 2027)",
   "notes": "Rev/EBITDA are Limbach's 2027 expectations; exact close date not captured.",
   "source": "https://www.limbachinc.com/?p=19927",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -73,6 +97,12 @@ export const PRECEDENTS = [
   "basis": "Historical average 2014-2020",
   "notes": "Rev/EBITDA are multi-year averages per aggregator summary; verify against Limbach release.",
   "source": "https://www.privsource.com/acquisitions/deal/rJSy3o",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -88,6 +118,12 @@ export const PRECEDENTS = [
   "basis": "Revenue annualized from 9-month contribution",
   "notes": "EV = $302.8M cash + $8.7M holdback; $28.0M contingent excluded. Revenue derived: $117.8M Apr-Dec 2023 x 12/9.",
   "source": "https://www.sec.gov/Archives/edgar/data/84839/000008483924000025/rol-20231231.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -103,6 +139,12 @@ export const PRECEDENTS = [
   "basis": "LTM (approx.)",
   "notes": "Revenue 'over $22M'; EBITDA derived from '>25% margin' -> floor estimate.",
   "source": "https://finder.techleap.nl/news/feed/transcat-acquires-essco-for-84m",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -118,6 +160,12 @@ export const PRECEDENTS = [
   "basis": "LTM (approx.)",
   "notes": "Up to $7.5M earnout excluded. EBITDA derived from 'mid-thirties' margin (~35%).",
   "source": "https://www.theglobeandmail.com/investing/markets/stocks/TRNS/pressreleases/3378974/transcat-expands-life-science-service-capabilities-and-geographic-reach-into-ireland-with-acquisition-of-nexa-enterprise-asset-management/",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -133,6 +181,12 @@ export const PRECEDENTS = [
   "basis": "Prior calendar year (2014)",
   "notes": "$10M at close; up to $10.75M earnout excluded. Older deal.",
   "source": "https://www.staffingindustry.com/Editorial/IT-Staffing-Report/Archive-IT-Staffing-Report/2015/Oct.-8-2015/BG-Staffing-acquires-VTS",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -148,6 +202,12 @@ export const PRECEDENTS = [
   "basis": "LTM Feb-2021",
   "notes": "EV derived from stated 4.8x LTM adj. EBITDA.",
   "source": "https://newswire.ca/news-releases/converge-technology-solutions-corp-acquires-dasher-technologies-inc--840113014.html",
+  "currency": "CAD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -163,6 +223,12 @@ export const PRECEDENTS = [
   "basis": "LTM Nov-2021",
   "notes": "EV derived from stated ~5.8x; paid US$52M cash.",
   "source": "https://ca.finance.yahoo.com/news/converge-technology-solutions-corp-acquires-130000168.html",
+  "currency": "CAD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -178,6 +244,12 @@ export const PRECEDENTS = [
   "basis": "FY Jan-2022",
   "notes": "EV derived from low end of stated 5.1-6.0x (excl. earnout). Paid US$47M + WC.",
   "source": "https://www.canadianlawyermag.com/cl-plus/deals/97",
+  "currency": "CAD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -193,6 +265,12 @@ export const PRECEDENTS = [
   "basis": "FY Oct-2021",
   "notes": "EV derived from stated ~5.96x; paid US$74M + WC.",
   "source": "https://www.canadianlawyermag.com/cl-plus/deals/155",
+  "currency": "CAD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -208,6 +286,12 @@ export const PRECEDENTS = [
   "basis": "LTM Jul-2022",
   "notes": "EV derived from stated 6.6x (WC-adjusted).",
   "source": "https://www.tipranks.com/news/converge-technology-tsects-announces-stone-group-acquisition-heres-why-its-promising",
+  "currency": "CAD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -223,6 +307,12 @@ export const PRECEDENTS = [
   "basis": "LTM Apr-2019",
   "notes": "EV = $6.5M closing consideration (cash + note); up to $3M earnout excluded.",
   "source": "https://www.channele2e.com/news/converge-technology-buys-nordisk",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -238,6 +328,12 @@ export const PRECEDENTS = [
   "basis": "CY2021",
   "notes": "90% contracted recurring revenue.",
   "source": "https://www.itwire.com/it-industry-news/strategy/hubify-acquires-connected-intelligence-msp-telco-business.html",
+  "currency": "AUD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -253,6 +349,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "$45M cash + $5M holdback.",
   "source": "https://www.mediapost.com/publications/article/336357/upland-software-acquires-kapost-for-50-million.html",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -268,6 +370,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "Per MediaPost summary of Upland announcement.",
   "source": "https://www.mediapost.com/publications/article/336357/upland-software-acquires-kapost-for-50-million.html",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -283,6 +391,12 @@ export const PRECEDENTS = [
   "basis": "FY25 recurring revenue",
   "notes": "EBITDA breakeven; consideration incl. cash, scrip and performance rights.",
   "source": "https://smallcaps.com.au/article/felix-group-boost-saas-offerings-nexvia-acquisition",
+  "currency": "AUD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -298,6 +412,12 @@ export const PRECEDENTS = [
   "basis": "Annual revenue",
   "notes": "EV grossed up to 100% from $11.9M for 70% stake.",
   "source": "https://www.businesswire.com/news/home/20210401005498/en",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 70,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -313,6 +433,12 @@ export const PRECEDENTS = [
   "basis": "Annual revenue",
   "notes": "EV grossed up to 100% from $3.7M for 75% stake.",
   "source": "https://www.businesswire.com/news/home/20220103005059/en",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 75,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -328,6 +454,12 @@ export const PRECEDENTS = [
   "basis": "Annual revenue",
   "notes": "EV grossed up to 100% from $6.2M for 80% stake.",
   "source": "https://www.businesswire.com/news/home/20230301005229/en",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 80,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -343,6 +475,12 @@ export const PRECEDENTS = [
   "basis": "Annual revenue",
   "notes": "EV grossed up to 100% from $3.1M for 75% stake.",
   "source": "https://www.businesswire.com/news/home/20230531005978/en",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 75,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -358,6 +496,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "Carve-out; announced price after adjustments.",
   "source": "https://www.sec.gov/Archives/edgar/data/1468328/000119312524158317/d40965dex991.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -373,6 +517,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "Definitive agreement (announced Sep 14, 2026).",
   "source": "https://www.sec.gov/Archives/edgar/data/0001468328/000143774926030348/ex_1015828.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -388,6 +538,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "$118.4M net of PV of tax benefits.",
   "source": "https://www.sec.gov/Archives/edgar/data/1468328/000119312519259837/d812208dex991.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -403,6 +559,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "$162.8M net of PV of tax benefits.",
   "source": "https://www.sec.gov/Archives/edgar/data/1468328/000119312520310609/d84763dex991.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -418,6 +580,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "Per aggregator deal summary; verify against Addus 8-K.",
   "source": "https://vectorshift.ai/research/deals/addus-homecare-tennessee-quality-care-2023",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -433,6 +601,12 @@ export const PRECEDENTS = [
   "basis": "Forward 12-month EBITDA",
   "notes": "EBITDA derived from stated 11x forward adj. EBITDA. $1.9M earnout excluded.",
   "source": "https://www.sec.gov/Archives/edgar/data/716314/000119312521255557/d175563dex991.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -448,6 +622,12 @@ export const PRECEDENTS = [
   "basis": "Projected 2026 EBITDA",
   "notes": "EBITDA derived from stated ~12x projected 2026 adj. EBITDA; up to $25M earnouts excluded.",
   "source": "https://www.quantisnow.com/insight/graham-corporation-acquires-flacktek-strengthening-mission-critical-engineered-products-platform-6360040",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -463,6 +643,12 @@ export const PRECEDENTS = [
   "basis": "Annualized revenue",
   "notes": "Revenue from secondary summary; consistent with $4.3M Q1-2025 contribution. Verify.",
   "source": "https://tipranks.com/news/the-fly/crawford-united-acquires-rahn-industries-for-13m-in-cash",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -478,6 +664,12 @@ export const PRECEDENTS = [
   "basis": "Expected FY2023",
   "notes": "$79M net of tax benefits. EBITDA derived from ~15% expected margin.",
   "source": "https://www.hydeparkcapital.com/?p=10833",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -493,6 +685,12 @@ export const PRECEDENTS = [
   "basis": "FY2009",
   "notes": "Older deal.",
   "source": "https://www.sec.gov/Archives/edgar/data/0001020710/000102071010000028/quadnapressrelease.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -508,6 +706,12 @@ export const PRECEDENTS = [
   "basis": "2010 annualized",
   "notes": "Older deal.",
   "source": "https://www.inddist.com/home/news/13765967/dxp-acquires-df-distributors-for-134-million",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -523,6 +727,12 @@ export const PRECEDENTS = [
   "basis": "Acquired EBITDA (approx.)",
   "notes": "$32.5M stock + $17.5M cash.",
   "source": "https://docoh.com/news/benzinga/38248206/transcat-further-expands",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -538,6 +748,12 @@ export const PRECEDENTS = [
   "basis": "Expected EBITDA contribution",
   "notes": "~12x EBITDA per Denny's; EBITDA contribution guided $6.5-7.0M.",
   "source": "https://www.sec.gov/Archives/edgar/data/852772/000085277222000053/q12022ex991earningspressre.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -553,6 +769,12 @@ export const PRECEDENTS = [
   "basis": "Estimated adj. EBITDA",
   "notes": "EBITDA derived from stated ~5.2x; up to $30M earnout excluded.",
   "source": "https://www.fleetowner.com/refrigerated-transporter/reefer-operations/article/21265096/covenant-logistics-acquires-poultry-carrier-lew-thompson-son-for-100-million",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -568,6 +790,12 @@ export const PRECEDENTS = [
   "basis": "Earnout-period adj. EBITDA",
   "notes": "Total price $35-55M = 3.3-5.5x per Covenant; low end used.",
   "source": "https://www.sec.gov/Archives/edgar/data/928658/000100888622000013/exhibit991.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -583,6 +811,12 @@ export const PRECEDENTS = [
   "basis": "Estimated annual",
   "notes": "Combined price for two deals; +$1.5M earnout excluded.",
   "source": "https://www.sec.gov/Archives/edgar/data/1442236/000119380521001708/e621135_ex99-1.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -598,6 +832,12 @@ export const PRECEDENTS = [
   "basis": "TTM Jun-2020",
   "notes": "",
   "source": "https://benzinga.com/z/17975653",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -613,6 +853,12 @@ export const PRECEDENTS = [
   "basis": "TTM Jul-2021",
   "notes": "EV incl. up to $12.6M earnout (basis of company's ~8.5x). EBITDA derived.",
   "source": "https://www.sec.gov/Archives/edgar/data/1354327/000156459021052982/pgti-ex991_15.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": true,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -628,6 +874,12 @@ export const PRECEDENTS = [
   "basis": "CY2021",
   "notes": "EBITDA not disclosed.",
   "source": "https://www.tipranks.com/news/universal-technical-acquires-concorde-career-colleges",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -643,6 +895,12 @@ export const PRECEDENTS = [
   "basis": "Approx. annual",
   "notes": "~4.1x 2023 operating income ($35M). Revenue from secondary summary; verify in 8-K/A.",
   "source": "https://www.sec.gov/Archives/edgar/data/1046568/000095017025022291/prdo-ex99_3.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -658,6 +916,12 @@ export const PRECEDENTS = [
   "basis": "2016",
   "notes": "Price range $14.5-15.0M (midpoint); ~4.5x EBITDA.",
   "source": "https://in.marketscreener.com/quote/stock/PARTY-CITY-HOLDCO-INC-21506520/news/Party-City-Holdco-Announces-the-Acquisition-of-18-Franchise-Stores-23655520",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -673,6 +937,12 @@ export const PRECEDENTS = [
   "basis": "Prior year",
   "notes": "~4.6x EBITDA (pre-synergy).",
   "source": "https://www.retail-insight-network.com/news/newsparty-city-acquires-18-franchise-stores-in-north-and-south-carolina-5765652/",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -688,6 +958,12 @@ export const PRECEDENTS = [
   "basis": "2017",
   "notes": "Only a ~4x fully-synergized multiple disclosed; standalone EBITDA not given.",
   "source": "https://www.benzinga.com/node/11333995",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -703,6 +979,12 @@ export const PRECEDENTS = [
   "basis": "2017",
   "notes": "Only a ~4x fully-synergized multiple disclosed.",
   "source": "https://www.gurufocus.com/news/714601",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -718,6 +1000,12 @@ export const PRECEDENTS = [
   "basis": "2017",
   "notes": "Only a ~4x fully-synergized multiple disclosed.",
   "source": "https://www.benzinga.com/node/12342342",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -733,6 +1021,12 @@ export const PRECEDENTS = [
   "basis": "2017 forecast EBITDA",
   "notes": "EBITDA derived from stated 5.5x 2017F adj. EBITDA; revenue = 2016 net revenue.",
   "source": "https://www.investegate.co.uk/announcement/bzw/next-15-group--nfg/acquisition/5190173",
+  "currency": "GBP",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "forward",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -748,6 +1042,12 @@ export const PRECEDENTS = [
   "basis": "FY2021",
   "notes": "EV derived from reported ~6.7x adj. EBITDA; revenue = net revenue.",
   "source": "https://lse.co.uk/news/next-fifteen-raises-16350m-to-part-fund-engine-uk-acquisition-4jp1mvxmjp630kn.html",
+  "currency": "GBP",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "ltm",
+  "ebitdaDerived": true,
   "isSample": false
  },
  {
@@ -763,6 +1063,12 @@ export const PRECEDENTS = [
   "basis": "FY ended Jun-2025",
   "notes": "Carve-out from Sysco; ~0.3x revenue.",
   "source": "https://www.sec.gov/Archives/edgar/data/1520358/000149315225012810/ex99-1.htm",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  },
  {
@@ -778,6 +1084,12 @@ export const PRECEDENTS = [
   "basis": "First full post-close fiscal year (FY2023)",
   "notes": "Revenue is post-acquisition FY2023 sales, not pre-deal LTM.",
   "source": "https://www.sec.gov/Archives/edgar/data/785956/000114036125000222/ny20038567x3_ars.pdf",
+  "currency": "USD",
+  "buyerType": "strategic",
+  "earnout": false,
+  "stakePct": 100,
+  "ebitdaBasis": "none",
+  "ebitdaDerived": false,
   "isSample": false
  }
 ];

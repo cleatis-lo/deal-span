@@ -66,3 +66,23 @@ test("simple template rows parse into the simple state", () => {
   assert.equal(s.addbacks.length, 2);
   assert.equal(s.addbacks[1].cat, "other");           // unknown category falls back to "other"
 });
+
+test("building: valued separately from the business, added as cash needed at closing", () => {
+  const s = { ...exampleOwner(), buildingValue: 1000000, q: { ...exampleOwner().q, building: "yes" } };
+  const d = toDeal(s);
+  assert.equal(d.askingPrice, 6250000);            // 7.25M ask - 1.0M building = the business alone
+  assert.equal(d.assumptions.extraUses, 1000000);
+});
+
+test("seller wants all cash: no seller note; earnout flag reaches the comparable matching", () => {
+  const cash = toDeal({ ...exampleOwner(), q: { ...exampleOwner().q, sellerPay: "cash" } });
+  assert.equal(cash.assumptions.sellerNotePct, 0);
+  const eo = toDeal({ ...exampleOwner(), q: { ...exampleOwner().q, sellerPay: "earnout" } });
+  assert.equal(eo.sellerTerms.earnout, true);
+  assert.equal(eo.assumptions.sellerNotePct, DEFAULTS.sellerNotePct);
+});
+
+test("overlap scales the savings you can count", () => {
+  const no = toDeal({ ...exampleOwner(), q: { ...exampleOwner().q, overlap: "no" } });
+  assert.equal(no.synergy.backOffice, 60000);      // 120K entered x 0.5
+});

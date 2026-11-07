@@ -70,26 +70,72 @@ export function sizeBenchmark(ebitda) {
   return { name: "Lower-middle-market sponsor deals", metric: "EBITDA", mult: 7.0, low: 6.0, high: 8.0, src: "gfdata" };
 }
 
+// ---------- 3a. Comparable deals: score every deal on how similar it is to yours ----------
+// Points (max 100): same subsector 25 · size 30 · buyer type 15 · structure 10 · recency 10 · profit basis 10.
+// Only same-industry deals with an EBITDA figure can score, and deals more than 5x your size either way are never used. The closest deals (score >= minCompScore,
+// at most maxComps) are used, and closer deals carry more weight (similarity-weighted median).
+export function scoreComparable(p, m, A) {
+  if (p.industry !== m.industry || !(p.ev > 0) || !(p.ebitda > 0) || !(m.ebitda > 0)) return null;
+  const reasons = [];
+  let sub = 0;
+  if (m.subsector && p.subsector && p.subsector.toLowerCase() === m.subsector.toLowerCase()) { sub = 25; reasons.push("same subsector"); }
+  const ratio = p.ebitda / m.ebitda, r = Math.max(ratio, 1 / ratio);
+  const size = 30 * Math.max(0, 1 - Math.log(r) / Math.log(5));
+  reasons.push(ratio >= 1 ? `${ratio.toFixed(1)}x your size` : `${(1 / ratio).toFixed(1)}x smaller than yours`);
+  let buyer = 0;
+  if (p.buyerType && m.buyerType) {
+    if (p.buyerType === m.buyerType) { buyer = 15; reasons.push("same kind of buyer"); }
+    else buyer = 5;
+  }
+  let structure = 0;
+  if (!!p.earnout === !!m.earnout) { structure += 5; reasons.push(p.earnout ? "also had an earnout" : "no earnout, like yours"); }
+  if ((p.stakePct || 100) >= 100) structure += 5; else reasons.push(`only ${p.stakePct}% bought`);
+  const yrs = A.asOfYear - parseInt(String(p.date).slice(0, 4), 10);
+  const recency = !isFinite(yrs) ? 0 : yrs <= 2 ? 10 : yrs <= 5 ? 5 : 0;
+  if (recency === 0) reasons.push("older deal");
+  const basis = p.ebitdaBasis === "ltm" ? 10 : 5;
+  if (p.ebitdaBasis === "forward") reasons.push("priced on forecast profit");
+  const score = sub + size + buyer + structure + recency + basis;
+  return { score, parts: { sub, size, buyer, structure, recency, basis }, reasons, multiple: p.ev / p.ebitda };
+}
+
+// Weighted median: sort by value, take the first value where cumulative weight reaches half the total.
+export function weightedMedian(items) {
+  const a = items.filter(i => isFinite(i.v) && i.w > 0).sort((x, y) => x.v - y.v);
+  if (!a.length) return NaN;
+  const half = a.reduce((s, i) => s + i.w, 0) / 2;
+  let c = 0;
+  for (const i of a) { c += i.w; if (c >= half) return i.v; }
+  return a[a.length - 1].v;
+}
+
+export function selectComparables(precedents, m, A) {
+  const scored = precedents.map(p => { const s = scoreComparable(p, m, A); return s ? { ...p, ...s } : null; })
+    .filter(Boolean).sort((x, y) => y.score - x.score);
+  // Hard size rule: a deal more than 5x bigger or smaller than yours (size points = 0) is never used.
+  const used = scored.filter(p => p.score >= A.minCompScore && p.parts.size > 0).slice(0, A.maxComps);
+  const mults = used.map(p => p.multiple);
+  const avgScore = used.length ? sum(used.map(p => p.score)) / used.length : 0;
+  const confidence = used.length >= 5 && avgScore >= 60 ? "high" : used.length >= 3 ? "medium" : "low";
+  return {
+    deals: used, considered: scored.length, count: used.length, avgScore, confidence,
+    q1: quantile(mults, 0.25), q3: quantile(mults, 0.75),
+    med: weightedMedian(used.map(p => ({ v: p.multiple, w: p.score }))),
+    sampleOnly: used.length > 0 && used.every(p => p.isSample)
+  };
+}
+
 export function analyzeValuation(t, eq, precedents, A) {
   const ind = industryById(t.industry);
   const e = eq.adjusted;
-  // Precedents: same industry; prefer deals with EBITDA within 0.25x–4x of the target's.
-  let pool = precedents.filter(p => p.industry === t.industry && p.ev > 0 && p.ebitda > 0);
-  const sized = pool.filter(p => p.ebitda >= e * 0.25 && p.ebitda <= e * 4);
-  const sizeFiltered = sized.length >= 3;
-  if (sizeFiltered) pool = sized;
-  const mults = pool.map(p => p.ev / p.ebitda);
-  const prec = {
-    deals: pool, count: mults.length, sizeFiltered,
-    q1: quantile(mults, 0.25), med: quantile(mults, 0.5), q3: quantile(mults, 0.75),
-    sampleOnly: pool.length > 0 && pool.every(p => p.isSample)
-  };
+  // Precedents: the closest deals by similarity score (see selectComparables).
+  const prec = selectComparables(precedents, { industry: t.industry, subsector: t.subsector, ebitda: e, buyerType: t.buyerType, earnout: !!t.earnout }, A);
   const bench = sizeBenchmark(e);
   // For SDE-sized businesses the benchmark applies to SDE (adds back the full owner salary).
   // SDE adds back the owner's full pay: adjusted EBITDA already includes pay above market, so add the market salary part.
   const benchBase = bench.metric === "SDE" ? e + Math.min(Number(t.ownerComp) || 0, A.marketOwnerSalary) : e;
   const methods = [];
-  if (prec.count >= 3) methods.push({ key: "precedents", label: `Precedent deals (${prec.count}${prec.sampleOnly ? ", sample data" : ""})`, low: prec.q1 * e, mid: prec.med * e, high: prec.q3 * e, basis: `25th–75th percentile ${prec.q1.toFixed(1)}x–${prec.q3.toFixed(1)}x EV/EBITDA, median ${prec.med.toFixed(1)}x` });
+  if (prec.count >= 3) methods.push({ key: "precedents", label: `Closest precedent deals (${prec.count}, ${prec.confidence} match${prec.sampleOnly ? ", sample data" : ""})`, low: prec.q1 * e, mid: prec.med * e, high: prec.q3 * e, basis: `25th–75th percentile ${prec.q1.toFixed(1)}x–${prec.q3.toFixed(1)}x EV/EBITDA, similarity-weighted median ${prec.med.toFixed(1)}x` });
   methods.push({ key: "benchmark", label: bench.name, low: bench.low * benchBase, mid: bench.mult * benchBase, high: bench.high * benchBase, basis: `${bench.mult.toFixed(1)}x ${bench.metric} (range ${bench.low.toFixed(1)}–${bench.high.toFixed(1)}x)`, src: bench.src });
   const core = methods.slice();
   const pub = { label: `Public comps: ${ind.damo} (reference only)`, low: ind.publicEvEbitda * 0.85 * e, mid: ind.publicEvEbitda * e, high: ind.publicEvEbitda * 1.15 * e, basis: `${ind.publicEvEbitda.toFixed(1)}x EV/EBITDA ±15%, public companies`, src: "damodaran", reference: true };
@@ -150,7 +196,7 @@ export function structureAt(price, ctx, rateBump = 0) {
   const { platform, A, cf } = ctx;
   const rate = A.baseRate + A.seniorSpread;
   const fees = price * A.feesPct;
-  const uses = price + fees;
+  const uses = price + fees + (A.extraUses || 0); // extraUses: cash needed at closing beyond the price (assumption input)
   const sellerNote = price * A.sellerNotePct;
   const sellerDS = pmt(A.sellerNoteRate, A.sellerNoteTermYrs, sellerNote);
   const existing = platform.existingDebt || 0;
@@ -222,7 +268,9 @@ export function analyzeRisk(t, fin, eq, val) {
 // ---------- 7. Run everything + the bid ----------
 export function runAll(d, precedents) {
   const A = d.assumptions;
-  const t = d.target, platform = d.platform;
+  const platform = d.platform;
+  // Deal context used to pick comparable deals: who is buying, and whether the seller will take an earnout.
+  const t = { ...d.target, buyerType: d.buyerType || (platform.ebitda > 0 ? "strategic" : "financial"), earnout: !!(d.sellerTerms && d.sellerTerms.earnout) };
   const fin = analyzeFinancials(t);
   const eq = analyzeEarnings(t, fin, A);
   const val = analyzeValuation(t, eq, precedents, A);

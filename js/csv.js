@@ -43,7 +43,13 @@ export function rowsToPrecedents(rows) {
       industry: g("industry"), subsector: g("subsector"), date: g("date"),
       target: g("target"), acquirer: g("acquirer"),
       ev: num(g("ev")), revenue: num(g("revenue")), ebitda: num(g("ebitda")),
-      basis: g("basis") || g("metric_basis"), notes: g("notes"), source: g("source"),
+      basis: g("basis") || g("metric_basis"), notes: g("notes"), source: g("source"), currency: g("currency") || "USD",
+      // Fields used to match deals to yours (see selectComparables in engine.js). Blank = unknown.
+      buyerType: (g("buyer_type") || "").toLowerCase(),
+      earnout: /^y/i.test(g("earnout")),
+      stakePct: num(g("stake_pct")) || 100,
+      ebitdaBasis: (g("ebitda_basis") || "").toLowerCase(),
+      ebitdaDerived: /^y/i.test(g("ebitda_derived")),
       isSample: /sample/i.test(g("source")) || /^sample/i.test(g("target"))
     };
     const why = !ids.has(d.industry) ? "unknown industry" : !(d.ev > 0) ? "missing EV" :

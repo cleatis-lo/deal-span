@@ -66,7 +66,9 @@ export const DEFAULTS = {
   discountRate: 0.15,         // for PV of synergies
   costRealize: 0.90, costYrs: 2,   // cost synergies: 90% captured (assumption) over ~2 yrs (McKinsey)
   revRealize: 0.77, revYrs: 5,     // revenue synergies: miss ~23%, ~5 yrs (McKinsey 2018)
-  integrationCostMult: 1.0         // one-time integration cost = 1.0x run-rate cost synergies (assumption)
+  integrationCostMult: 1.0,        // one-time integration cost = 1.0x run-rate cost synergies (assumption)
+  minCompScore: 40, maxComps: 8,   // comparable deals: minimum similarity score (of 100) and how many to use (assumption)
+  asOfYear: 2026                   // for scoring how recent a comparable deal is
 };
 
 export function demoDeal() {

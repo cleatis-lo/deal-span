@@ -168,3 +168,42 @@ test("recurring one-time rule only applies to one-time items", () => {
   const R = E.runAll(d, PRECEDENTS);
   close(R.eq.acceptedTotal, 80000, 1e-6);   // personal stays at 80%
 });
+
+test("comparable deals: similarity score parts and the hard size rule", () => {
+  const { val } = demo();
+  const p = val.prec;
+  // Demo target: home services, adj. EBITDA $1,369,050, buyer = platform (strategic), no earnout, no subsector given.
+  assert.deepEqual(p.deals.map(d => d.target), ["Jake Marshall LLC", "Kent Island Mechanical", "Consolidated Mechanical (CMI)"]);
+  const jm = p.deals[0];
+  // size: 30 x (1 - ln(4.5M/1.369M) / ln 5) = 7.82; buyer 15; structure 10 (no earnout, 100%); recency 5 (2021); basis 10 (actual)
+  close(jm.parts.size, 30 * (1 - Math.log(4500000 / 1369050) / Math.log(5)), 1e-9);
+  close(jm.score, jm.parts.size + 15 + 10 + 5 + 10, 1e-9);
+  // Pioneer Power (7.3x bigger) and 1901 (8.0x) score 40 but are never used: more than 5x the target's size.
+  assert.ok(!p.deals.some(d => d.target === "Pioneer Power" || d.target === "1901 Inc."));
+  assert.equal(p.confidence, "medium");
+});
+
+test("weighted median: closer deals count more", () => {
+  assert.equal(E.weightedMedian([{ v: 3.75, w: 45 }, { v: 4.44, w: 48 }, { v: 5.75, w: 45 }]), 4.44);
+  assert.equal(E.weightedMedian([{ v: 3, w: 10 }, { v: 9, w: 90 }]), 9);   // a much closer deal dominates
+  assert.ok(isNaN(E.weightedMedian([])));
+});
+
+test("same subsector earns 25 points", () => {
+  const d = demoDeal();
+  d.target.subsector = "Commercial HVAC / mechanical contractor";
+  const R = E.runAll(d, PRECEDENTS);
+  const kim = R.val.prec.deals.find(x => x.target === "Kent Island Mechanical");
+  assert.equal(kim.parts.sub, 25);
+});
+
+test("extra cash needed at closing raises the equity check one-for-one", () => {
+  const base = demo();
+  const d = demoDeal();
+  d.assumptions.extraUses = 500000;
+  const R = E.runAll(d, PRECEDENTS);
+  close(R.atAsk.uses, base.atAsk.uses + 500000, 1e-6);
+  // Demo is bound by the 30% minimum-equity rule, so equity rises by 30% of the extra 500K and debt covers the rest.
+  close(R.atAsk.equity - base.atAsk.equity, 500000 * DEFAULTS.minEquityPct, 1e-6);
+  assert.ok(R.prices.financeableMax < base.prices.financeableMax);
+});

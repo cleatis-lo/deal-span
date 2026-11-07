@@ -114,3 +114,9 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3p
 .card h3{font-size:15px;margin:16px 0 4px}
 .stat{font-size:20px}
 .top .r a.btn{font-size:14px}
+.comp{padding:10px 0;border-top:1px solid var(--line)}
+.comp-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.comp-h .mult{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+.simbar{height:6px;background:#ecece7;border-radius:3px;margin:6px 0 4px;overflow:hidden}
+.simbar div{height:100%;background:#2457c5;border-radius:3px}
+.card h3 .light{margin-left:8px;vertical-align:1px}
