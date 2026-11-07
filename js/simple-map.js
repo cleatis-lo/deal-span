@@ -118,10 +118,25 @@ export function toDeal(s) {
 
 export const ready = s => s.asking > 0 && s.sales > 0 && s.profit > 0;
 
+// The seller-numbers sheet: the blank upload template, or a filled copy of the user's numbers
+// (the Excel export includes one, so a saved export can be uploaded again).
+export function simpleToRows(s) {
+  const b = s || blankSimple(), v = x => (s ? x : "");
+  return [
+    ["Field", "Value", "Notes"], ["Business name", v(b.name), ""], ["Industry", b.industry, INDUSTRIES.map(i => i.id).join(" | ")],
+    ["Asking price", v(b.asking), ""], ["Sales, last 12 months", v(b.sales), ""], ["Profit (EBITDA), last 12 months", v(b.profit), "Before seller adjustments"],
+    ["Owner's total pay", v(b.ownerPay), ""], ["Sales, 2 years ago", v(b.salesPrev), "Optional"], ["Profit, 2 years ago", v(b.profitPrev), "Optional"], ["Yearly equipment spending", v(b.equipment), ""],
+    ...(s && b.addbacks.length ? b.addbacks.map(a => ["Adjustment: " + a.desc, a.amt, a.cat])
+      : [["Adjustment: <describe it>", "", "Category in column C: personal | one_time | discretionary | pro_forma | other"]])
+  ];
+}
+
 const num = s => { const v = parseFloat(String(s).replace(/[$,\s]/g, "")); return isFinite(v) ? v : 0; };
 // Read our simple Excel/CSV template (rows of [field, value, category]).
 export function rowsToSimple(rows, base) {
-  const n = blankSimple(); if (base && base.q) n.q = base.q;
+  // Only the seller's numbers come from the file; keep the buyer's own answers (step 2) and the risk answers.
+  const n = blankSimple();
+  if (base) { if (base.q) n.q = base.q; ["cash", "bizSales", "bizProfit", "bizDebt", "savings", "extraSales"].forEach(k => { if (base[k] != null) n[k] = base[k]; }); }
   const map = { "business name": "name", "industry": "industry", "asking price": "asking", "sales, last 12 months": "sales", "profit (ebitda), last 12 months": "profit", "owner's total pay": "ownerPay", "sales, 2 years ago": "salesPrev", "profit, 2 years ago": "profitPrev", "yearly equipment spending": "equipment" };
   rows.forEach(r => {
     const k = String(r[0] || "").trim(), lk = k.toLowerCase();

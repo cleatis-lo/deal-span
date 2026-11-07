@@ -3,8 +3,9 @@
 import * as E from "./engine.js";
 import { INDUSTRIES, SOURCES } from "./data.js";
 import { PRECEDENTS } from "./precedents.js";
-import { buildMemoWorkbook } from "./template.js";
-import { OPT, ADD_CATS, blankSimple, exampleOwner, exampleFirst, toDeal, ready, usesSBA, rowsToSimple, subsectorsFor, buildingValue, extraWC } from "./simple-map.js";
+import { buildOwnerWorkbook } from "./owner-workbook.js";
+import { answerModel } from "./answer.js";
+import { OPT, ADD_CATS, blankSimple, exampleOwner, exampleFirst, toDeal, ready, rowsToSimple, simpleToRows, subsectorsFor } from "./simple-map.js";
 
 const KEY = "dealspan_simple_v1";
 let S, D, R, STEP = 0;
@@ -15,43 +16,6 @@ const pc = v => Math.round(v * 100) + "%";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const num = s => { const v = parseFloat(String(s).replace(/[$,\s]/g, "")); return isFinite(v) ? v : 0; };
 const lbl = (set, v) => ((OPT[set].find(o => o[0] === v) || [, ""])[1]).toLowerCase();
-
-// What to ask the seller for, per adjustment type (plain-English version of ADDBACK_TESTS).
-const ADD_ASK = {
-  one_time: "invoices or settlement papers, plus 3 years of the books showing it didn't happen before.",
-  personal: "receipts showing the expense is personal and stops after the sale.",
-  discretionary: "payroll records and job duties, to confirm you won't need to replace the person.",
-  pro_forma: "the signed contract, start date and expected margin. Pay for it only once it's earned (an earnout).",
-  other: "the detailed books and a written explanation of why it won't happen again."
-};
-const ADD_WHY = {
-  one_time: "Mostly counted, if it truly won't happen again.",
-  personal: "Partly counted. Banks want receipts for personal expenses.",
-  discretionary: "Usually counted.",
-  pro_forma: "Mostly not counted. It hasn't been earned yet.",
-  other: "Half counted. It's unclear what this is."
-};
-
-// ---------- plain-English risk wording (engine areas -> owner language) ----------
-function plainFlag(f) {
-  const q = S.q, e = R.eq, fin = R.fin;
-  const P = {
-    "Customer concentration": ["Sales depend on a few customers", `The biggest customer is about ${lbl("topCustomer", q.topCustomer)} of sales and the top 5 are ${lbl("top5", q.top5)}. If a big one leaves, profit drops fast.`, "Is there a signed contract with the biggest customers, and when does it end? Ask to talk to them before you sign.", "Tie part of the price to those customers staying (an earnout)."],
-    "Owner dependence": ["The business depends on the owner", `The owner ${+q.owner >= 5 ? "is the business" : +q.owner === 4 ? "holds the key customer relationships" : "manages it day-to-day"}. Customers may follow them out the door.`, "Who has the customer relationships, licenses and pricing knowledge today?", "Require the owner to stay 6–12 months to hand things over, and line up a manager before closing."],
-    "Recurring revenue": ["Not much repeat business", `${lbl("recurring", q.recurring).replace(/^./, c => c.toUpperCase())} of sales repeats or is under contract. The rest has to be won again every year.`, "How much of last year's sales came from service plans or repeat customers?", "Base your price on the repeat sales and treat one-off jobs as a bonus."],
-    "Key employees": ["Key employees might leave", q.staff === "no" ? "You don't know whether the key people will stay." : "Key employees haven't agreed to stay yet.", "Can you meet the key employees before closing? Are they paid fairly?", "Offer stay bonuses, paid at closing or after one year."],
-    "Revenue trend": ["Sales aren't growing", `Sales changed about ${(fin.revCagr * 100).toFixed(1)}% a year.`, "Why? Lost customers, lower prices, or one big job ending?", "Price it on today's profit, not the seller's forecast."],
-    "Margin trend": ["Profit margins are shrinking", `Profit as a share of sales fell ${Math.abs(fin.marginChange * 100).toFixed(1)} points.`, "What changed: wages, material costs, or prices?", "Price it on the weaker year if the cause won't go away."],
-    "Add-back quality": ["The profit depends on the seller's adjustments", `The adjustments add ${Math.round(e.addbackPct * 100)}% on top of reported profit, and about ${Math.round(e.haircut * 100)}% of the seller's number probably won't hold up.`, "Ask for receipts and records for every adjustment over $10K.", "Hire an accountant to verify profit (a quality-of-earnings review) and tie the price to what they find."],
-    "Industry cyclicality": ["Sales could drop in a recession", `This type of business ${R.val.ind.cyc === "high" ? "usually gets hit hard" : "usually feels it some"} when the economy slows.`, "How did sales hold up in 2020 and in the last slowdown?", "Borrow less than the maximum and keep a cash cushion."],
-    "Supplier concentration": ["It depends on one supplier", q.supplier === "yes" ? "One supplier provides more than half of what they buy." : "You don't know yet whether one supplier dominates.", "Are there other suppliers? Will the supplier agreement continue after the sale?", "Get the supplier's sign-off before closing."],
-    "Lease": ["The building lease", q.lease === "short" ? "Less than 2 years left on the lease, or it can't be transferred." : "Only 2–5 years left on the lease.", "Will the landlord transfer or extend the lease? Is the seller the landlord?", "Make a signed lease a condition of closing. Banks usually want it to run as long as the loan."],
-    "Licenses & contracts": ["Licenses or contracts may not transfer", q.transfer === "partly" ? "Some licenses or customer contracts may not transfer to you." : "You don't know whether licenses and contracts will transfer.", "List every license, permit and customer contract. Whose name is on each?", "Make the transfers a condition of closing."],
-    "Financial statement quality": ["The financial records are thin", `The records are ${lbl("books", q.books)}.`, "Can they show bank statements that match the tax returns?", "Don't skip the quality-of-earnings review."]
-  };
-  const x = P[f.area] || [f.area, f.finding, f.ask, ""];
-  return { rating: f.rating, title: x[0], what: x[1], ask: x[2], fix: x[3] };
-}
 
 // ---------- state ----------
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (x) { } }
@@ -147,78 +111,34 @@ function step2() {
 function step3() {
   if (!ready(S)) return `<div class="card empty"><h2>We need a few numbers first</h2><p>Enter the asking price, sales and profit on step 1.</p><button class="btn go" data-go="0">Go to step 1</button></div>`;
   recompute();
-  const p = R.prices, e = R.eq, v = R.val, a = R.atAsk, st = R.atAskStress, y = R.syn, A = D.assumptions;
-  // Prices on screen include the building (if any); the engine values the business alone.
-  const B = buildingValue(S), WC = extraWC(S);
-  const ask = p.ask + B, bid = p.bidUpTo + B, walk = p.walkAway + B, finMax = p.financeableMax + B;
-  const sa = { low: p.standalone.low + B, mid: p.standalone.mid + B, high: p.standalone.high + B };
-  const flags = R.risk.items.filter(r => r.rating === "red" || r.rating === "yellow").sort((x, z) => (x.rating === "red" ? -1 : 1) - (z.rating === "red" ? -1 : 1)).map(plainFlag);
-  const reds = flags.filter(f => f.rating === "red").length;
-  const limitedByCash = finMax < sa.mid + 1;
-  const pc_ = R.val.prec;
-
-  // Verdict in plain English, from the engine's call.
-  let say, sub;
-  if (R.callClass === "green") {
-    say = reds ? `The price can work, but fix ${reds} serious problem${reds === 1 ? "" : "s"} first.` : `The asking price of ${$m(ask)} looks reasonable.`;
-    sub = `It's at or below what the business is worth on its own. Don't go above ${$m(walk)}, and confirm the profit with an accountant before you sign.`;
-  } else if (R.callClass === "yellow") {
-    say = `The asking price of ${$m(ask)} is close to your limit.`;
-    sub = `It's more than the business is worth on its own: you'd be paying the seller for savings only you can create. Offer ${$m(bid)} and walk away above ${$m(walk)}.`;
-  } else {
-    say = `Don't pay ${$m(ask)}.`;
-    sub = limitedByCash
-      ? `With ${$m(D.platform.equityAvailable)} of your own cash, the most you can finance is ${$m(finMax)}. Offer up to ${$m(bid)} and walk away above ${$m(walk)}.`
-      : `On the profit a bank will believe, it's worth about ${$m(sa.low)}–${$m(sa.high)}. Offer up to ${$m(bid)} and walk away above ${$m(walk)}.`;
-  }
-
-  // 1. earnings lines
-  const lines = [];
-  if (e.ownerExcess > 0) lines.push(["ok", `Owner pay above a manager's salary (${$m(D.target.ownerComp)} paid − ${$m(A.marketOwnerSalary)} to replace them)`, e.ownerExcess, e.ownerExcess]);
-  e.items.forEach(i => lines.push([i.accept >= 0.85 ? "ok" : i.accept >= 0.5 ? "part" : "no", `${esc(i.desc)}: <span class="note">${i.recurring ? "Not counted. They called it one-time last year too, so it keeps happening." : ADD_WHY[i.category] || ""}</span>`, i.claimed, i.accepted]));
-
-  // 3. financing
-  const have = D.platform.equityAvailable, need = a.equity, gap = Math.max(0, need - have), U = a.uses;
-  const seg = (val, cls, txt) => val > 0 ? `<div class="${cls}" style="width:${val / U * 100}%">${val / U > 0.12 ? txt : ""}</div>` : "";
-  const cover = d => { d = Math.round(d * 100) / 100; return d >= 1.35 ? ["green", "Yes, comfortably"] : d >= A.minFCCR ? ["green", "Yes, at the bank's minimum"] : d >= 1.1 ? ["amber", "Just barely. Below what banks require"] : ["red", "No"]; };
-  const [c1, w1] = cover(a.fccr), [c2, w2] = cover(st.fccr);
-  const loanName = usesSBA(S) ? "SBA 7(a) loan" : "Bank term loan";
-
-  // range bar
-  const lo = Math.min(sa.low, bid, ask, walk) * 0.85, hi = Math.max(sa.high, ask, walk) * 1.08;
+  const M = answerModel(S, D, R), F = M.financing, C = M.comps, Y = M.synergy, e = M.earnings;
+  const ask = M.ask, walk = M.walk, sa = M.worth;
+  const seg = (val, cls, txt) => val > 0 ? `<div class="${cls}" style="width:${val / F.total * 100}%">${val / F.total > 0.12 ? txt : ""}</div>` : "";
+  const lo = Math.min(sa.low, M.bid, ask, walk) * 0.85, hi = Math.max(sa.high, ask, walk) * 1.08;
   const P = x => Math.max(0, Math.min(100, (x - lo) / (hi - lo) * 100));
-
-  // offer letter
-  const shown = flags.slice(0, Math.max(4, reds)), more = flags.slice(shown.length);
+  const shown = M.flags.slice(0, Math.max(4, M.reds)), more = M.flags.slice(shown.length);
   const flagHtml = f => `<div class="flag"><div class="t"><span class="light ${f.rating === "red" ? "red" : "amber"}">${f.rating === "red" ? "Serious" : "Watch"}</span>${esc(f.title)}</div><div class="d">${esc(f.what)}</div><div class="a"><b>Ask the seller:</b> ${esc(f.ask)}</div><div class="a"><b>Protect yourself:</b> ${esc(f.fix)}</div></div>`;
-  const conds = [`Price at or below ${$m(walk)}.`, `An accountant's review (quality of earnings) confirms profit of at least ${$m(e.adjusted * 0.95)}. If it comes in lower, the price drops.`];
-  if (gap > 0) conds.push(`Close the ${$m(gap)} cash gap: a bigger seller note, an investor, or a lower price.`);
-  flags.filter(f => f.rating === "red" && f.title !== "The profit depends on the seller's adjustments").forEach(f => conds.push(f.fix));
-  if (+S.q.owner === 3) conds.push("The owner stays 6–12 months to hand over customers and know-how.");
-  const proForma = e.items.filter(i => i.category === "pro_forma" && i.claimed > 0);
-  if (S.q.sellerPay === "earnout" && proForma.length) conds.push(`Pay for ${proForma.map(i => i.desc.toLowerCase()).join(", ")} through the earnout, only once it's actually earned.`);
-  if (B > 0) conds.push(`An independent appraisal confirms the building is worth at least ${$m(B)}.`);
-  const n = (y.claimed > 0 ? 6 : 5);
+  const n = Y ? 6 : 5;
 
   return `
-  <div class="answer ${R.callClass === "yellow" ? "amber" : R.callClass}">
-    <div class="note eyebrow">${esc(D.target.name)}</div>
-    <div class="say">${esc(say)}</div>
-    <div class="plain">${esc(sub)}</div>
+  <div class="answer ${M.callClass === "yellow" ? "amber" : M.callClass}">
+    <div class="note eyebrow">${esc(M.name)}</div>
+    <div class="say">${esc(M.say)}</div>
+    <div class="plain">${esc(M.sub)}</div>
     <div class="big3">
-      <div><div class="l">Offer up to</div><div class="v">${$m(bid)}</div><div class="s">what it's worth on its own${bid < sa.mid - 1 ? ", limited by what you can finance" : ""}</div></div>
-      <div><div class="l">Walk away above</div><div class="v">${$m(walk)}</div><div class="s">${y.pv > 0 && walk > bid + 1 ? "never give the seller more than half your savings" : "your hard limit"}</div></div>
-      <div><div class="l">Asking price</div><div class="v">${$m(ask)}</div><div class="s">${ask > walk ? `${$m(ask - walk)} above your walk-away` : "inside your limit"}</div></div>
+      <div><div class="l">Offer up to</div><div class="v">${$m(M.bid)}</div><div class="s">${esc(M.bidNote)}</div></div>
+      <div><div class="l">Walk away above</div><div class="v">${$m(walk)}</div><div class="s">${esc(M.walkNote)}</div></div>
+      <div><div class="l">Asking price</div><div class="v">${$m(ask)}</div><div class="s">${esc(M.askNote)}</div></div>
     </div>
-    ${B > 0 ? `<p class="note" style="margin:12px 0 0">All prices include the building at ${$m(B)}. The business itself is valued on its profit.</p>` : ""}
+    ${M.building > 0 ? `<p class="note" style="margin:12px 0 0">All prices include the building at ${$m(M.building)}. The business itself is valued on its profit.</p>` : ""}
   </div>
 
   <div class="card">
     <div class="sec-h"><span class="n">1</span><h2>What the business really earns</h2></div>
     <div class="compare"><span>Seller says</span><span class="from">${$m(e.seller)}</span><span>→ a bank will likely believe</span><span class="to">${$m(e.adjusted)}</span><span class="note">a year</span></div>
-    <p class="plain">Paying the asking price on the seller's number would mean overpaying about <b>${$m(R.mispricing.priceImpact)}</b>.</p>
-    <div class="lines">${lines.map(l => `<div><span class="i ${l[0]}">${l[0] === "ok" ? "✓" : l[0] === "part" ? "½" : "✗"}</span><span>${l[1]}</span><span>${$m(l[3])} <span class="note">of ${$m(l[2])}</span></span></div>`).join("")}</div>
-    <details><summary>How we decide this</summary><p class="note">Each type of adjustment gets a fixed rule based on how lenders treat it. In real deals, independent accountants cut the seller's number by 8–15% on about half of small-business loans. We also replace the owner's pay with a ${$m(A.marketOwnerSalary)} manager's salary, because you'll have to pay someone to do their job. Overpayment = the profit gap × the price ÷ seller's profit.</p></details>
+    <p class="plain">Paying the asking price on the seller's number would mean overpaying about <b>${$m(e.overpay)}</b>.</p>
+    <div class="lines">${e.lines.map(l => `<div><span class="i ${l.status}">${l.status === "ok" ? "✓" : l.status === "part" ? "½" : "✗"}</span><span>${esc(l.label)}: <span class="note">${esc(l.note)}</span></span><span>${$m(l.counted)} <span class="note">of ${$m(l.claimed)}</span></span></div>`).join("")}</div>
+    <details><summary>How we decide this</summary><p class="note">Each type of adjustment gets a fixed rule based on how lenders treat it. In real deals, independent accountants cut the seller's number by 8–15% on about half of small-business loans. We also replace the owner's pay with a ${$m(e.managerSalary)} manager's salary, because you'll have to pay someone to do their job. Overpayment = the profit gap × the price ÷ seller's profit.</p></details>
   </div>
 
   <div class="card">
@@ -230,66 +150,60 @@ function step3() {
       <div class="mk" style="left:${P(ask)}%;background:var(--red)"><span style="color:var(--red)">Asking ${$m(ask)}</span></div>
       <div class="mk" style="left:${P(walk)}%;background:var(--ink)"><em>Walk away ${$m(walk)}</em></div>
     </div>
-    <h3>The sold businesses we compared it to <span class="light ${pc_.confidence === "high" ? "green" : pc_.confidence === "medium" ? "amber" : "red"}">${pc_.confidence} match</span></h3>
-    ${pc_.count >= 3 ? `<p class="note" style="margin:0 0 8px">We scored every ${esc(v.ind.label.toLowerCase())} deal with a public price on how much it looks like yours (same work, similar size, same kind of buyer, deal structure, how recent). We used the ${pc_.count} closest; closer deals count more. ${pc_.considered - pc_.count > 0 ? `${pc_.considered - pc_.count} others were too different.` : ""}</p>` : `<p class="note" style="margin:0 0 8px">Not enough sold businesses close enough to yours (we need 3 within 5x your size). The value uses the small-business average only. Add more deals to the data to fix this.</p>`}
-    ${pc_.deals.map(d => `<div class="comp"><div class="comp-h"><b>${esc(d.target)}</b><span class="note">${esc(d.acquirer)} · ${esc(String(d.date).slice(0, 4))} · <a href="${esc(d.source)}" target="_blank" rel="noopener">source</a></span><span class="mult">${d.multiple.toFixed(1)}x profit</span></div>
+    <h3>The sold businesses we compared it to <span class="light ${C.confidence === "high" ? "green" : C.confidence === "medium" ? "amber" : "red"}">${C.confidence} match</span></h3>
+    ${C.enough ? `<p class="note" style="margin:0 0 8px">We scored every ${esc(C.industry.toLowerCase())} deal with a public price on how much it looks like yours (same work, similar size, same kind of buyer, deal structure, how recent). We used the ${C.count} closest; closer deals count more. ${C.considered - C.count > 0 ? `${C.considered - C.count} others were too different.` : ""}</p>` : `<p class="note" style="margin:0 0 8px">Not enough sold businesses close enough to yours (we need 3 within 5x your size). The value uses the small-business average only. Add more deals to the data to fix this.</p>`}
+    ${C.deals.map(d => `<div class="comp"><div class="comp-h"><b>${esc(d.target)}</b><span class="note">${esc(d.acquirer)} · ${esc(d.year)} · <a href="${esc(d.source)}" target="_blank" rel="noopener">source</a></span><span class="mult">${d.multiple.toFixed(1)}x profit</span></div>
       <div class="simbar"><div style="width:${d.score}%"></div></div><div class="note">${Math.round(d.score)}/100 similar: ${esc(d.reasons.join(" · "))}</div></div>`).join("")}
-    <p class="note" style="margin-top:12px">Also used: the ${v.bench.mult}x average for businesses this size. Big public companies in this industry trade around ${(v.pub.mid / e.adjusted).toFixed(0)}x. Small businesses sell for far less, so don't let anyone price this like a public company.</p>
-    <details><summary>How the similarity score works</summary><p class="note">Out of 100: same type of work 25 · size 30 (full points at the same size, zero at 5x bigger or smaller) · same kind of buyer 15 · deal structure 10 (earnout, bought 100%) · how recent 10 · based on actual vs. forecast profit 10. A deal needs ${A.minCompScore}+ points and must be within 5x your size to count. The price multiple is the similarity-weighted middle of those deals.</p></details>
+    <p class="note" style="margin-top:12px">Also used: the ${C.benchMult}x average for businesses this size. Big public companies in this industry trade around ${C.publicMult.toFixed(0)}x. Small businesses sell for far less, so don't let anyone price this like a public company.</p>
+    <details><summary>How the similarity score works</summary><p class="note">Out of 100: same type of work 25 · size 30 (full points at the same size, zero at 5x bigger or smaller) · same kind of buyer 15 · deal structure 10 (earnout, bought 100%) · how recent 10 · based on actual vs. forecast profit 10. A deal needs ${C.minScore}+ points and must be within 5x your size to count. The price multiple is the similarity-weighted middle of those deals.</p></details>
   </div>
 
   <div class="card">
     <div class="sec-h"><span class="n">3</span><h2>How you'd pay for it (at the asking price)</h2></div>
-    <div class="bar">${seg(a.incremental, "c-bank", "Bank loan " + $m(a.incremental))}${seg(a.sellerNote, "c-seller", "Seller " + $m(a.sellerNote))}${seg(Math.min(need, have), "c-you", "Your cash " + $m(Math.min(need, have)))}${seg(gap, "c-gap", "Missing " + $m(gap))}</div>
-    <div class="key"><span><i class="c-bank"></i>${loanName}: ${$m(a.incremental)} at about ${(a.rate * 100).toFixed(1)}%</span><span><i class="c-seller"></i>Seller financing: ${$m(a.sellerNote)}</span><span><i class="c-you"></i>Your cash: ${$m(Math.min(need, have))}</span>${gap > 0 ? `<span><i class="c-gap"></i>Missing: ${$m(gap)}</span>` : ""}</div>
-    <p class="plain" style="margin-top:14px">${gap > 0 ? `At ${$m(ask)} you'd need <b>${$m(need)}</b> of your own money. You have ${$m(have)}. That's why the most you can finance is ${$m(finMax)}.` : `You'd put in <b>${$m(need)}</b> of the ${$m(have)} you have.`}${a.binding === "loan size cap" ? " The SBA caps the loan at $5M." : ""}${a.existing > 0 ? ` Your business already owes ${$m(a.existing)}, and the bank looks at both businesses together.` : ""}${WC > 0 ? ` This includes ${$m(WC)} for inventory and receivables paid on top of the price.` : ""}${S.q.sellerPay === "cash" ? " The seller wants all cash, so there's no seller financing." : ""}</p>
+    <div class="bar">${seg(F.bank, "c-bank", "Bank loan " + $m(F.bank))}${seg(F.seller, "c-seller", "Seller " + $m(F.seller))}${seg(F.yourCash, "c-you", "Your cash " + $m(F.yourCash))}${seg(F.gap, "c-gap", "Missing " + $m(F.gap))}</div>
+    <div class="key"><span><i class="c-bank"></i>${F.loanName}: ${$m(F.bank)} at about ${(F.rate * 100).toFixed(1)}%</span><span><i class="c-seller"></i>Seller financing: ${$m(F.seller)}</span><span><i class="c-you"></i>Your cash: ${$m(F.yourCash)}</span>${F.gap > 0 ? `<span><i class="c-gap"></i>Missing: ${$m(F.gap)}</span>` : ""}</div>
+    <p class="plain" style="margin-top:14px">${F.notes.map(esc).join(" ")}</p>
     <div class="grid" style="margin-top:12px">
-      <div><div class="note">Can ${a.existing > 0 || D.platform.ebitda > 0 ? "the combined business" : "the business"} pay its loans?</div><span class="light ${c1}">${w1}</span><div class="note" style="margin-top:4px">It earns $${a.fccr.toFixed(2)} for every $1 of loan payments. Banks want at least $${A.minFCCR.toFixed(2)}.</div></div>
-      <div><div class="note">If interest rates rise 3%?</div><span class="light ${c2}">${w2}</span><div class="note" style="margin-top:4px">$${st.fccr.toFixed(2)} for every $1 of loan payments.</div></div>
+      <div><div class="note">Can ${F.combined ? "the combined business" : "the business"} pay its loans?</div><span class="light ${F.coverageColor}">${F.coverageWord}</span><div class="note" style="margin-top:4px">It earns $${F.coverage.toFixed(2)} for every $1 of loan payments. Banks want at least $${F.minCoverage.toFixed(2)}.</div></div>
+      <div><div class="note">If interest rates rise 3%?</div><span class="light ${F.stressColor}">${F.stressWord}</span><div class="note" style="margin-top:4px">$${F.stressCoverage.toFixed(2)} for every $1 of loan payments.</div></div>
     </div>
   </div>
 
-  ${flags.length ? `<div class="card">
+  ${M.flags.length ? `<div class="card">
     <div class="sec-h"><span class="n">4</span><h2>What could go wrong</h2></div>
     ${shown.map(flagHtml).join("")}
     ${more.length ? `<details><summary>${more.length} smaller thing${more.length === 1 ? "" : "s"} to check</summary>${more.map(flagHtml).join("")}</details>` : ""}
   </div>` : ""}
 
-  ${y.claimed > 0 ? `<div class="card">
+  ${Y ? `<div class="card">
     <div class="sec-h"><span class="n">5</span><h2>What you'd gain together</h2></div>
-    <p class="plain">You expect <b>${$m((S.savings || 0) + (S.extraSales || 0) * 0.35)}</b> a year in extra profit from combining. Plan on about <b>${$m(y.runRate)}</b>, and expect it to take time.</p>
-    <p class="note">Most buyers overestimate this. On average, extra sales from combining come in about a quarter below plan and take around 5 years. Cost savings are more reliable and arrive in about 2. Budget about ${$m(y.integrationCost)} one-time to combine the two businesses. Those savings are yours, which is why we never let you pay the seller more than half of them.${S.q.overlap !== "yes" ? ` Because the businesses ${S.q.overlap === "no" ? "don't overlap" : "only partly overlap"}, we counted ${S.q.overlap === "no" ? "half" : "three-quarters"} of the savings you entered.` : ""}</p>
+    <p class="plain">You expect <b>${$m(Y.expected)}</b> a year in extra profit from combining. Plan on about <b>${$m(Y.planOn)}</b>, and expect it to take time.</p>
+    <p class="note">Most buyers overestimate this. On average, extra sales from combining come in about a quarter below plan and take around 5 years. Cost savings are more reliable and arrive in about 2. Budget about ${$m(Y.integrationCost)} one-time to combine the two businesses. Those savings are yours, which is why we never let you pay the seller more than half of them.${Y.overlapNote ? " " + esc(Y.overlapNote) : ""}</p>
     <div class="grid3" style="margin-top:10px">
-      <div><div class="note">Combined yearly profit</div><b class="stat">${$m(R.cf.pfEbitda)}</b></div>
-      <div><div class="note">Total debt ÷ profit, after buying</div><b class="stat">${a.totalLeverage.toFixed(1)}x</b> <span class="light ${a.totalLeverage > 4 ? "red" : a.totalLeverage > 3 ? "amber" : "green"}">${a.totalLeverage > 4 ? "high" : a.totalLeverage > 3 ? "moderate" : "healthy"}</span></div>
-      <div><div class="note">Value of the savings (5 years)</div><b class="stat">${$m(y.pv)}</b></div>
+      <div><div class="note">Combined yearly profit</div><b class="stat">${$m(Y.combinedProfit)}</b></div>
+      <div><div class="note">Total debt ÷ profit, after buying</div><b class="stat">${Y.debtToProfit.toFixed(1)}x</b> <span class="light ${Y.debtWord === "high" ? "red" : Y.debtWord === "moderate" ? "amber" : "green"}">${Y.debtWord}</span></div>
+      <div><div class="note">Value of the savings (5 years)</div><b class="stat">${$m(Y.pv)}</b></div>
     </div>
   </div>` : ""}
 
   <div class="card">
     <div class="sec-h"><span class="n">${n}</span><h2>Your offer letter</h2></div>
-    <p class="plain"><b>Offer up to ${$m(bid)}. Walk away above ${$m(walk)}.</b></p>
+    <p class="plain"><b>Offer up to ${$m(M.bid)}. Walk away above ${$m(walk)}.</b></p>
     <h3>Check these seller adjustments first</h3>
-    <ol class="check">${R.toTest.map(t => `<li><b>${esc(t.desc)}</b>: ${$m(t.priceAtStake)} of the asking price rests on it. Ask for ${esc(ADD_ASK[t.category] || t.test)}</li>`).join("")}</ol>
+    <ol class="check">${M.toCheck.map(t => `<li><b>${esc(t.desc)}</b>: ${$m(t.atStake)} of the asking price rests on it. Ask for ${esc(t.ask)}</li>`).join("")}</ol>
     <h3>Conditions to put in the letter</h3>
-    <ol class="check">${[...new Set(conds)].map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+    <ol class="check">${M.conditions.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
   </div>
 
   <div class="nav noprint"><button class="btn" data-go="1">← Change answers</button><div class="row"><button class="btn" data-print="1">Print / PDF</button><button class="btn dark" data-xlsx="1">Download Excel</button></div></div>
-  <p class="note">This is a first screen, not a quality-of-earnings report or a valuation opinion. Every number comes from your inputs, a fixed rule, or a public source. No AI is used.</p>`;
+  <p class="note">${esc(M.disclaimer)}</p>`;
 }
 
 // ---------- files ----------
 function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.remove("hide"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3500); }
 function download(name, wb) { window.XLSX.writeFile(wb, name); }
-const TEMPLATE_ROWS = [
-  ["Field", "Value", "Notes"], ["Business name", "", ""], ["Industry", "home_services", INDUSTRIES.map(i => i.id).join(" | ")],
-  ["Asking price", "", ""], ["Sales, last 12 months", "", ""], ["Profit (EBITDA), last 12 months", "", "Before seller adjustments"],
-  ["Owner's total pay", "", ""], ["Sales, 2 years ago", "", "Optional"], ["Profit, 2 years ago", "", "Optional"], ["Yearly equipment spending", "", ""],
-  ["Adjustment: <describe it>", "", "Category in column C: personal | one_time | discretionary | pro_forma | other"]
-];
 function templateDownload() {
-  const X = window.XLSX, wb = X.utils.book_new(), ws = X.utils.aoa_to_sheet(TEMPLATE_ROWS);
+  const X = window.XLSX, wb = X.utils.book_new(), ws = X.utils.aoa_to_sheet(simpleToRows());
   ws["!cols"] = [{ wch: 36 }, { wch: 16 }, { wch: 70 }];
   X.utils.book_append_sheet(wb, ws, "Seller numbers"); download("DealSpan_template.xlsx", wb);
 }
@@ -297,11 +211,12 @@ function upload(file) {
   const rd = new FileReader();
   rd.onload = ev => {
     const wb = window.XLSX.read(ev.target.result, { type: "array" });
-    S = rowsToSimple(window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), S); save(); render(); toast("Template loaded. Check the numbers below.");
+    const sh = wb.Sheets["Seller numbers"] || wb.Sheets[wb.SheetNames[0]];
+    S = rowsToSimple(window.XLSX.utils.sheet_to_json(sh, { header: 1 }), S); save(); render(); toast("Template loaded. Check the numbers below.");
   };
   rd.readAsArrayBuffer(file);
 }
-function exportXlsx() { recompute(); download((D.target.name || "deal").replace(/[^a-z0-9]+/gi, "_").slice(0, 40) + "_DealSpan.xlsx", buildMemoWorkbook(D, R, SOURCES)); }
+function exportXlsx() { recompute(); download((D.target.name || "deal").replace(/[^a-z0-9]+/gi, "_").slice(0, 40) + "_DealSpan.xlsx", buildOwnerWorkbook(window.XLSX, S, answerModel(S, D, R), SOURCES)); }
 
 // ---------- events ----------
 document.addEventListener("input", ev => {

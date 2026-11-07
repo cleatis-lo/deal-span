@@ -78,7 +78,7 @@ export function scoreComparable(p, m, A) {
   if (p.industry !== m.industry || !(p.ev > 0) || !(p.ebitda > 0) || !(m.ebitda > 0)) return null;
   const reasons = [];
   let sub = 0;
-  if (m.subsector && p.subsector && p.subsector.toLowerCase() === m.subsector.toLowerCase()) { sub = 25; reasons.push("same subsector"); }
+  if (m.subsector && p.subsector && p.subsector.toLowerCase() === m.subsector.toLowerCase()) { sub = 25; reasons.push("same type of work"); }
   const ratio = p.ebitda / m.ebitda, r = Math.max(ratio, 1 / ratio);
   const size = 30 * Math.max(0, 1 - Math.log(r) / Math.log(5));
   reasons.push(ratio >= 1 ? `${ratio.toFixed(1)}x your size` : `${(1 / ratio).toFixed(1)}x smaller than yours`);
