@@ -3,6 +3,9 @@
 // Pure functions, no DOM. All math stays in engine.js. No AI.
 import { OPT, buildingValue, extraWC, usesSBA } from "./simple-map.js";
 
+// SBA SOP 50 10 8.1, effective Oct 1, 2026: independent QoE required at a business purchase price of $3M+.
+export const SBA_QOE_MIN = 3000000;
+
 export const money = v => !isFinite(v) ? "—" : (v < 0 ? "-" : "") + "$" + (Math.abs(v) >= 1e6 ? (Math.abs(v) / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M" : Math.round(Math.abs(v) / 1e3).toLocaleString("en-US") + "K");
 const lbl = (set, v) => ((OPT[set].find(o => o[0] === v) || [, ""])[1]).toLowerCase();
 
@@ -121,7 +124,12 @@ export function answerModel(S, D, R) {
 
   // Offer letter.
   const toCheck = R.toTest.map(t => ({ desc: t.desc, atStake: t.priceAtStake, ask: ADD_ASK[t.category] || t.test }));
-  const conds = [`Price at or below ${money(walk)}.`, `An accountant's review (quality of earnings) confirms profit of at least ${money(e.adjusted * 0.95)}. If it comes in lower, the price drops.`];
+  // SBA SOP 50 10 8.1 (from Oct 1, 2026): a QoE is required on 7(a) acquisitions with a business
+  // purchase price of $3M or more (owner-occupied real estate excluded), and the lender sizes the loan on it.
+  const qoeRequired = usesSBA(S) && p.ask >= SBA_QOE_MIN;
+  const conds = [`Price at or below ${money(walk)}.`, qoeRequired
+    ? `The SBA requires an accountant's review (quality of earnings) on business purchases of $3M or more, and the bank sizes the loan on its number. Make the price depend on it: profit of at least ${money(e.adjusted * 0.95)}, or the price drops.`
+    : `An accountant's review (quality of earnings) confirms profit of at least ${money(e.adjusted * 0.95)}. If it comes in lower, the price drops.`];
   if (gap > 0) conds.push(`Close the ${money(gap)} cash gap: a bigger seller note, an investor, or a lower price.`);
   flags.filter(f => f.rating === "red" && f.title !== "The profit depends on the seller's adjustments").forEach(f => conds.push(f.fix));
   if (+S.q.owner === 3) conds.push("The owner stays 6–12 months to hand over customers and know-how.");
@@ -130,7 +138,7 @@ export function answerModel(S, D, R) {
   if (B > 0) conds.push(`An independent appraisal confirms the building is worth at least ${money(B)}.`);
 
   return {
-    name: D.target.name, callClass: R.callClass, say, sub, reds,
+    name: D.target.name, callClass: R.callClass, say, sub, reds, qoeRequired,
     building: B, extraWC: WC, ask, bid, walk, finMax, worth, limitedByCash,
     bidNote: `what it's worth on its own${bid < worth.mid - 1 ? ", limited by what you can finance" : ""}`,
     walkNote: y.pv > 0 && walk > bid + 1 ? "never give the seller more than half your savings" : "your hard limit",

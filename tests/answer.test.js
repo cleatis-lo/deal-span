@@ -90,3 +90,14 @@ test("a saved export loads back with the same seller numbers and the same answer
   assert.equal(again.M.bid, M.bid);
   assert.equal(again.M.walk, M.walk);
 });
+
+test("SBA quality-of-earnings rule: required at a $3M+ business price, building excluded", () => {
+  const big = model(exampleOwner());                                   // $7.25M ask, SBA terms
+  assert.equal(big.M.qoeRequired, true);
+  assert.ok(big.M.conditions[1].startsWith("The SBA requires"));
+  const small = model({ ...exampleOwner(), asking: 2900000 });
+  assert.equal(small.M.qoeRequired, false);
+  // $3.5M ask including a $1M building = $2.5M business price: below the line.
+  const withBuilding = model({ ...exampleOwner(), asking: 3500000, buildingValue: 1000000, q: { ...exampleOwner().q, building: "yes" } });
+  assert.equal(withBuilding.M.qoeRequired, false);
+});

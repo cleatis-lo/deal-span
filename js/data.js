@@ -2,6 +2,7 @@
 // or labeled "assumption" so a user can see it and change it on the Assumptions panel.
 
 export const SOURCES = {
+  sbaQoe: { label: "SBA SOP 50 10 8.1 (effective Oct 1, 2026): independent quality-of-earnings report required on 7(a) acquisitions with a business purchase price of $3M or more", url: "https://www.eisneramper.com/insights/financial-services/sba-quality-of-earnings-requirement-0826/" },
   damodaran: { label: "Damodaran, NYU Stern: EV/EBITDA by industry (US, Jan 2026)", url: "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.html" },
   bizbuysell: { label: "BizBuySell Insight Report (Q1 2026): ~2.7x cash flow (SDE) median for Main Street sales", url: "https://www.bizbuysell.com/insight-report/" },
   pioneer: { label: "Pioneer Buy-Side Brief (2026): ~5.5x EBITDA for $1–5M TEV deals; owner replacement comp $100–150K; QoE cuts stated earnings 8–15% on ~half of deals", url: "https://matthiassmith.kit.com/posts/the-pioneer-buy-side-brief-a-candid-look-at-what-s-actually-closing-in-the-sba-acquisition-market-in-2026" },
