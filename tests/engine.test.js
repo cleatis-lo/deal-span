@@ -48,14 +48,17 @@ test("size benchmark thresholds", () => {
 
 test("valuation: precedents, benchmark, standalone, public comps", () => {
   const { val } = demo();
-  // Home-services deals with EBITDA in 0.25x–4x of $1.37M: Kent Island 3.75x, CMI 5.75x, Jake Marshall 4.44x
-  assert.equal(val.prec.count, 3);
-  close(val.prec.med, 20 / 4.5, 1e-9);
+  // 6 home-services deals within 5x of $1.37M: three Kingsway plumbing deals (6.25x, 5.00x, 7.81x),
+  // Jake Marshall 4.44x, Kent Island 3.75x, CMI 5.75x. Weighted by score (55, 47.5, 47.2, 47.8, 45, 45),
+  // the cumulative weight first passes half the total (143.75 of 287.5) at CMI, so the median is 5.75x.
+  assert.equal(val.prec.count, 6);
+  close(val.prec.med, 23 / 4, 1e-9);
   const benchMid = 5.5 * 1369050;                      // 7,529,775
-  const precMid = (20 / 4.5) * 1369050;                // 6,084,667
-  close(val.standalone.mid, (benchMid + precMid) / 2, 1e-6);   // 6,807,221
+  const precMid = (23 / 4) * 1369050;                  // 7,872,038
+  close(val.standalone.mid, (benchMid + precMid) / 2, 1e-6);   // 7,700,906
   close(val.pub.mid, 17.18 * 1369050, 1e-6);           // 23.5M: the "size trap"
-  assert.ok(val.publicPremium > 2.4);                   // public comps imply >3.4x the standalone value
+  close(val.publicPremium, (17.18 * 1369050) / val.standalone.mid - 1, 1e-9);
+  assert.ok(val.publicPremium > 2.0);                   // public comps imply ~3.05x the standalone value
 });
 
 test("synergies: claimed vs realistic, PV", () => {
@@ -173,14 +176,27 @@ test("comparable deals: similarity score parts and the hard size rule", () => {
   const { val } = demo();
   const p = val.prec;
   // Demo target: home services, adj. EBITDA $1,369,050, buyer = platform (strategic), no earnout, no subsector given.
-  assert.deepEqual(p.deals.map(d => d.target), ["Jake Marshall LLC", "Kent Island Mechanical", "Consolidated Mechanical (CMI)"]);
-  const jm = p.deals[0];
+  assert.deepEqual(p.deals.map(d => d.target), ["Bud's Plumbing (M.L.C. Plumbing)", "Jake Marshall LLC",
+    "Advanced Plumbing & Drain (AAA Flexible Pipe Cleaning)", "Southside Plumbing", "Kent Island Mechanical", "Consolidated Mechanical (CMI)"]);
+  const jm = p.deals.find(d => d.target === "Jake Marshall LLC");
+  // Bud's Plumbing: a search-fund-style holding company buying (financial) vs a strategic buyer here, so 5 buyer points.
+  assert.equal(p.deals[0].parts.buyer, 5);
+  // Southside: owner kept 20%, so it loses the 5 points for buying 100%.
+  assert.equal(p.deals.find(d => d.target === "Southside Plumbing").parts.structure, 0);
   // size: 30 x (1 - ln(4.5M/1.369M) / ln 5) = 7.82; buyer 15; structure 10 (no earnout, 100%); recency 5 (2021); basis 10 (actual)
   close(jm.parts.size, 30 * (1 - Math.log(4500000 / 1369050) / Math.log(5)), 1e-9);
   close(jm.score, jm.parts.size + 15 + 10 + 5 + 10, 1e-9);
   // Pioneer Power (7.3x bigger) and 1901 (8.0x) score 40 but are never used: more than 5x the target's size.
   assert.ok(!p.deals.some(d => d.target === "Pioneer Power" || d.target === "1901 Inc."));
-  assert.equal(p.confidence, "medium");
+  assert.equal(p.confidence, "medium");   // 6 deals but average score 47.9 (< 60 needed for high)
+});
+
+test("a first-time buyer gets partial buyer credit for search-fund-style deals", () => {
+  const p = { industry: "x", ev: 5, ebitda: 1, buyerType: "financial", date: "2025-01" };
+  const m = { industry: "x", ebitda: 1, buyerType: "individual" };
+  assert.equal(E.scoreComparable(p, m, DEFAULTS).parts.buyer, 10);
+  assert.equal(E.scoreComparable({ ...p, buyerType: "strategic" }, m, DEFAULTS).parts.buyer, 5);
+  assert.equal(E.scoreComparable({ ...p, buyerType: "individual" }, m, DEFAULTS).parts.buyer, 15);
 });
 
 test("weighted median: closer deals count more", () => {

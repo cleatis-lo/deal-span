@@ -23,6 +23,7 @@ Built by RedHaek for a 24-hour fintech hackathon.
 - **Every formula is tested:** `npm test` (Node 20+) checks the examples against hand-computed values.
 - Rules and assumptions are labeled in `js/data.js` and `js/simple-map.js`; sourced figures link to their source.
 - Precedent deals (`data/precedent_transactions.csv`) are public deals, each with a source link. Regenerate `js/precedents.js` with `npm run build:precedents`.
+- Small deals ($2–23M) come mostly from Kingsway, a public holding company that buys businesses search-fund style and discloses price, revenue and adjusted EBITDA for each deal. They are tagged `buyer_type=financial`; a first-time buyer gets partial buyer-match credit for them. Partial stakes are grossed up to 100%. Excluded: deals with no disclosed profit (SPI, The HR Team, Ledgers), a deal that never closed (NICR), and deals whose price and profit were for different periods (1847 Holdings / CMD).
 
 The example companies are fictional.
 

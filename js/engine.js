@@ -85,6 +85,8 @@ export function scoreComparable(p, m, A) {
   let buyer = 0;
   if (p.buyerType && m.buyerType) {
     if (p.buyerType === m.buyerType) { buyer = 15; reasons.push("same kind of buyer"); }
+    // A first-time buyer and a search-fund-style holding company both buy without an existing business to merge into.
+    else if ([p.buyerType, m.buyerType].sort().join() === "financial,individual") { buyer = 10; reasons.push("search-fund style buyer, close to a first-time buyer"); }
     else buyer = 5;
   }
   let structure = 0;
