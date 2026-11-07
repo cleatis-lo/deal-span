@@ -1,0 +1,12 @@
+{
+  "name": "deal-span",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DealSpan: deterministic, auditable add-on diligence for lower-middle-market buyers",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build:precedents": "node tools/build-precedents.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}
