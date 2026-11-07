@@ -30,7 +30,7 @@ export function setPath(o, p, v) { const ks = p.split("."); const last = ks.pop(
 export function buildTemplate(d) {
   const X = window.XLSX, wb = X.utils.book_new();
   const fin = [["Line item", ...d.target.financials.map(f => f.label)], ...LINES.map(([lab, k]) => [lab, ...d.target.financials.map(f => f[k] || 0)])];
-  const add = [["Description", "Amount ($)", "Category"], ...d.target.addbacks.map(a => [a.desc, a.amount, a.category])];
+  const add = [["Description", "Amount ($)", "Category", "Also claimed last year? (yes/no)"], ...d.target.addbacks.map(a => [a.desc, a.amount, a.category, a.priorYear ? "yes" : "no"])];
   const deal = [["Field", "Value"], ...FIELDS.map(([lab, p]) => { const v = getPath(d, p); return [lab, BOOL.has(p) ? (v ? "yes" : "no") : v]; })];
   const lists = [["Add-back categories", "Meaning", "", "Industry ids", "Industry"],
     ...Array.from({ length: Math.max(Object.keys(ADDBACK_RULES).length, INDUSTRIES.length) }, (_, i) => {
@@ -39,7 +39,7 @@ export function buildTemplate(d) {
     })];
   const sheet = (rows, widths) => { const ws = X.utils.aoa_to_sheet(rows); ws["!cols"] = widths.map(w => ({ wch: w })); return ws; };
   X.utils.book_append_sheet(wb, sheet(fin, [34, 14, 14, 14]), "Financials");
-  X.utils.book_append_sheet(wb, sheet(add, [52, 14, 16]), "Add-backs");
+  X.utils.book_append_sheet(wb, sheet(add, [52, 14, 16, 30]), "Add-backs");
   X.utils.book_append_sheet(wb, sheet(deal, [70, 30]), "Deal");
   X.utils.book_append_sheet(wb, sheet(lists, [20, 46, 2, 20, 52]), "Lists");
   return wb;
@@ -70,7 +70,9 @@ export function parseTemplate(wb) {
   d.target.addbacks = add.slice(1).filter(r => String(r[0]).trim() && toNum(r[1]) !== 0).map(r => {
     let cat = String(r[2]).trim().toLowerCase().replace(/[\s-]+/g, "_");
     if (!ADDBACK_RULES[cat]) { warnings.push(`Add-back "${r[0]}" has category "${r[2]}"; treated as other.`); cat = "other"; }
-    return { desc: String(r[0]).trim(), amount: toNum(r[1]), category: cat };
+    const ab = { desc: String(r[0]).trim(), amount: toNum(r[1]), category: cat };
+    if (/^(y|yes|true|1)$/i.test(String(r[3] ?? "").trim())) ab.priorYear = true;
+    return ab;
   });
   const deal = rows("Deal") || [];
   FIELDS.forEach(([lab, p]) => {
@@ -96,7 +98,9 @@ export function buildMemoWorkbook(d, R, SOURCES) {
     ["DealSpan memo", `${d.target.name} into ${d.platform.name}`], [],
     ["Bid up to", r0(R.prices.bidUpTo)], ["Walk away above", r0(R.prices.walkAway)], ["Seller's ask", r0(R.prices.ask)],
     ["Max the platform can finance", r0(R.prices.financeableMax)], ["Call", R.call], [],
-    ["Diligence before LOI"], ...R.conditions.map((c, i) => [`${i + 1}. ${c.area}`, c.ask]), [],
+    ["EBITDA overstatement", r0(R.mispricing.overstatement)], ["Price impact at the ask's multiple (" + R.mispricing.askMultiple.toFixed(2) + "x)", r0(R.mispricing.priceImpact)], [],
+    ["Add-backs to test first"], ...R.toTest.map((a, i) => [`${i + 1}. ${a.desc} (${r0(a.claimed)} claimed, ${r0(a.priceAtStake)} of price at stake)`, a.test]), [],
+    ["Other diligence before LOI"], ...R.conditions.map((c, i) => [`${i + 1}. ${c.area}`, c.ask]), [],
     ["Rule: bid up to = standalone value; walk away = standalone + at most " + Math.round(d.assumptions.synergyShareMax * 100) + "% of synergy PV; both capped at the financing limit."],
     ["Pre-LOI screen, not a QoE or valuation opinion. No AI used; every number is a rule or a cited source."]
   ], [34, 90]);
@@ -104,7 +108,7 @@ export function buildMemoWorkbook(d, R, SOURCES) {
     ["Item", "Claimed", "Accepted", "Rule"],
     ["Reported LTM EBITDA", r0(R.eq.reported), r0(R.eq.reported), "From the P&L"],
     ["Owner pay above market salary", r0(R.eq.ownerExcess), r0(R.eq.ownerExcess), `Owner comp minus $${d.assumptions.marketOwnerSalary.toLocaleString()} market salary`],
-    ...R.eq.items.map(i => [i.desc, r0(i.claimed), r0(i.accepted), `${i.rule.label}: ${Math.round(i.rule.accept * 100)}% accepted`]),
+    ...R.eq.items.map(i => [i.desc, r0(i.claimed), r0(i.accepted), i.ruleText]),
     ["Adjusted EBITDA", r0(R.eq.seller), r0(R.eq.adjusted), `DealSpan cut ${(R.eq.haircut * 100).toFixed(1)}%`]
   ], [52, 14, 14, 60]);
   add("Valuation", [

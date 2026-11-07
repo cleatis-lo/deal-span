@@ -149,14 +149,16 @@ function renderSetup() {
 
   <section class="section" style="margin-top:18px">
     <header><h2>Seller's add-backs</h2><p>Copy these from the CIM exactly as the seller states them. DealSpan applies its rules on the next step.</p></header>
-    <table><thead><tr><th class="l" style="width:48%">Description</th><th style="width:16%">Amount ($)</th><th class="l">Category</th><th></th></tr></thead><tbody>
+    <table><thead><tr><th class="l" style="width:48%">Description</th><th style="width:16%">Amount ($)</th><th class="l">Category</th><th class="l">Also claimed last year</th><th></th></tr></thead><tbody>
     ${t.addbacks.map((a, i) => `<tr>
       <td><input class="txt" data-path="target.addbacks.${i}.desc" data-type="text" value="${esc(a.desc)}" aria-label="Add-back description"></td>
       <td><input data-path="target.addbacks.${i}.amount" data-type="money" inputmode="decimal" value="${Math.round(a.amount).toLocaleString()}" aria-label="Add-back amount"></td>
       <td><select data-path="target.addbacks.${i}.category" data-type="text" aria-label="Add-back category">${Object.entries(ADDBACK_RULES).map(([k, r]) => `<option value="${k}" ${a.category === k ? "selected" : ""}>${r.label}</option>`).join("")}</select></td>
+      <td class="l"><input type="checkbox" data-path="target.addbacks.${i}.priorYear" data-type="bool" ${a.priorYear ? "checked" : ""} aria-label="Also claimed last year" style="width:auto"></td>
       <td><button class="btn quiet small" data-act="delAddback" data-i="${i}" aria-label="Remove add-back">Remove</button></td></tr>`).join("")}
     </tbody></table>
     <button class="btn small" data-act="addAddback" style="margin-top:10px">Add an add-back</button>
+    <p class="faint" style="margin:10px 0 0">Tick "also claimed last year" for any one-time item that shows up in the prior year's add-backs too. DealSpan rejects it.</p>
   </section>
 
   <div class="cols">
@@ -211,12 +213,15 @@ function renderEarnings() {
     </div>
   </section>
 
+  <div class="call ${R.mispricing.priceImpact > 0 ? "red" : "green"}">Pricing off the seller's number overpays by ${$m(R.mispricing.priceImpact)}.
+    <span>${$m(R.mispricing.overstatement)} of overstated EBITDA × ${x2(R.mispricing.askMultiple)}, the multiple the seller's ask puts on their own EBITDA. This is how R&amp;W insurers measure the loss when a QoE finds it after closing.</span></div>
+
   <section class="section">
     <header><h2>Add-back by add-back</h2><p>Acceptance rates are editable under Assumptions. They're anchored to lender evidence that QoE work cuts stated earnings 8–15% on about half of small deals (${src("pioneer")}).</p></header>
     <table><thead><tr><th class="l">Item</th><th>Seller claims</th><th>DealSpan accepts</th><th>Cut</th></tr></thead><tbody>
       <tr><td>Reported LTM EBITDA<span class="note">Revenue − COGS − operating expenses, latest period</span></td><td>${$k(e.reported)}</td><td>${$k(e.reported)}</td><td></td></tr>
       <tr><td>Owner pay above a market salary<span class="note">${$k(D.target.ownerComp)} owner pay − ${$k(D.assumptions.marketOwnerSalary)} to hire a replacement GM (${src("pioneer")})</span></td><td>${$k(e.ownerExcess)}</td><td>${$k(e.ownerExcess)}</td><td></td></tr>
-      ${e.items.map(i => `<tr><td>${esc(i.desc)}<span class="note">${i.rule.label}: ${pc(i.rule.accept)} accepted. ${i.rule.note}</span></td><td>${$k(i.claimed)}</td><td>${$k(i.accepted)}</td><td class="${i.cut > 0 ? "cut" : ""}">${i.cut > 0 ? "−" + $k(i.cut).slice(1) : ""}</td></tr>`).join("")}
+      ${e.items.map(i => `<tr><td>${esc(i.desc)}<span class="note">${esc(i.ruleText)}</span></td><td>${$k(i.claimed)}</td><td>${$k(i.accepted)}</td><td class="${i.cut > 0 ? "cut" : ""}">${i.cut > 0 ? "−" + $k(i.cut).slice(1) : ""}</td></tr>`).join("")}
       <tr class="total"><td>Adjusted EBITDA</td><td>${$k(e.seller)}</td><td>${$k(e.adjusted)}</td><td class="cut">−${$k(e.seller - e.adjusted).slice(1)}</td></tr>
     </tbody></table>
     <p class="faint" style="margin:10px 0 0">If every seller add-back were rejected, EBITDA would be ${$m(e.downside)}. Add-backs plus excess owner pay equal ${pc(e.addbackPct)} of reported EBITDA.</p>
@@ -308,6 +313,7 @@ function renderValue() {
 function renderMemo() {
   const P = R.prices, A = D.assumptions, e = R.eq;
   const why = [
+    `The seller's EBITDA is ${$m(R.mispricing.overstatement)} too high. At the ask's ${x2(R.mispricing.askMultiple)} multiple, that's ${$m(R.mispricing.priceImpact)} of overpayment.`,
     `Standalone value is ${$m(P.standalone.mid)}: the average of ${R.val.methods.filter(m => !m.reference).map(m => m.label).join(" and ")}, applied to DealSpan's ${$m(e.adjusted)} of adjusted EBITDA, not the seller's ${$m(e.seller)}.`,
     `Walk-away adds ${pc(A.synergyShareMax)} of the ${$m(R.syn.pv)} synergy value. You keep the rest and all of the multiple arbitrage.`,
     P.financeableMax < P.walkAway + 1 ? `The walk-away is capped by financing: with ${$m(D.platform.equityAvailable)} of equity the platform can fund at most ${$m(P.financeableMax)}.` : `Financing isn't the constraint: the platform could fund up to ${$m(P.financeableMax)}.`,
@@ -327,7 +333,9 @@ function renderMemo() {
 
   <div class="cols-3">
     <section class="section">
-      <header><h2>Diligence before you sign an LOI</h2></header>
+      <header><h2>Add-backs to test first</h2><p>Ranked by how much of the asking price rests on each one (claimed × ${x2(R.mispricing.askMultiple)}).</p></header>
+      <ol class="conds">${R.toTest.map(a => `<li><b>${esc(a.desc)}</b><span class="muted">${$k(a.claimed)} claimed, ${$m(a.priceAtStake)} of price at stake${a.recurring ? ", already rejected as recurring" : ""}.</span> ${esc(a.test)}</li>`).join("") || "<li>No add-backs claimed.</li>"}</ol>
+      <h3 style="margin-top:20px">Other diligence before you sign an LOI</h3>
       <ol class="conds">${R.conditions.map(c => `<li><b><span class="dot ${c.rating}"></span>${esc(c.area)}</b>${esc(c.ask)}</li>`).join("") || "<li>No red or yellow risks. Confirm earnings with a QoE.</li>"}</ol>
       <h3 style="margin-top:20px">How the prices were set</h3>
       <ul class="why">${why.map(w => `<li>${w}</li>`).join("")}</ul>

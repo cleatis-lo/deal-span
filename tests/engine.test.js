@@ -31,10 +31,12 @@ test("earnings quality: seller vs DealSpan adjusted EBITDA", () => {
   assert.equal(eq.ownerExcess, 160000);       // 285K owner pay - 125K market salary
   assert.equal(eq.claimedTotal, 320000);      // 60 + 45 + 52 + 125 + 38
   assert.equal(eq.seller, 1530000);           // 1,050 + 160 + 320
-  // accepted: 60x75% + 45x80% + 52x90% + 125x25% + 38x50% = 45 + 36 + 46.8 + 31.25 + 19 = 178.05K
-  close(eq.acceptedTotal, 178050, 1e-6);
-  close(eq.adjusted, 1388050, 1e-6);
-  close(eq.haircut, 1 - 1388050 / 1530000, 1e-12);   // 9.3%
+  // accepted: 60x75% + 45x80% + 52x90% + 125x25% + 38x0% (one-time claimed 2 yrs running -> rejected)
+  //         = 45 + 36 + 46.8 + 31.25 + 0 = 159.05K
+  close(eq.acceptedTotal, 159050, 1e-6);
+  close(eq.adjusted, 1369050, 1e-6);
+  close(eq.haircut, 1 - 1369050 / 1530000, 1e-12);   // 10.5%
+  assert.equal(eq.items[4].recurring, true);
   assert.equal(eq.downside, 1210000);                 // rejects every seller add-back
 });
 
@@ -46,13 +48,13 @@ test("size benchmark thresholds", () => {
 
 test("valuation: precedents, benchmark, standalone, public comps", () => {
   const { val } = demo();
-  // Home-services deals with EBITDA in 0.25x–4x of $1.39M: Kent Island 3.75x, CMI 5.75x, Jake Marshall 4.44x
+  // Home-services deals with EBITDA in 0.25x–4x of $1.37M: Kent Island 3.75x, CMI 5.75x, Jake Marshall 4.44x
   assert.equal(val.prec.count, 3);
   close(val.prec.med, 20 / 4.5, 1e-9);
-  const benchMid = 5.5 * 1388050;                      // 7,634,275
-  const precMid = (20 / 4.5) * 1388050;                // 6,169,111
-  close(val.standalone.mid, (benchMid + precMid) / 2, 1e-6);   // 6,901,693
-  close(val.pub.mid, 17.18 * 1388050, 1e-6);           // 23.8M: the "size trap"
+  const benchMid = 5.5 * 1369050;                      // 7,529,775
+  const precMid = (20 / 4.5) * 1369050;                // 6,084,667
+  close(val.standalone.mid, (benchMid + precMid) / 2, 1e-6);   // 6,807,221
+  close(val.pub.mid, 17.18 * 1369050, 1e-6);           // 23.5M: the "size trap"
   assert.ok(val.publicPremium > 2.4);                   // public comps imply >3.4x the standalone value
 });
 
@@ -70,10 +72,10 @@ test("synergies: claimed vs realistic, PV", () => {
 
 test("combined cash flow available for debt service", () => {
   const { cf } = demo();
-  assert.equal(cf.pfEbitda, 4100000 + 1388050);
+  assert.equal(cf.pfEbitda, 4100000 + 1369050);
   assert.equal(cf.capex, 775000);
-  close(cf.taxes, 0.25 * (5488050 - 775000), 1e-6);
-  close(cf.cfads, 3534787.5, 1e-6);
+  close(cf.taxes, 0.25 * (5469050 - 775000), 1e-6);
+  close(cf.cfads, 3520537.5, 1e-6);
 });
 
 test("financing at the asking price", () => {
@@ -84,14 +86,14 @@ test("financing at the asking price", () => {
   close(s.incremental, 5589000, 1e-6);
   close(s.sellerNote + s.incremental + s.equity, s.uses, 1e-6);   // sources = uses
   const ds = 16589000 * (0.0925 + 0.05) + 213656.7603880705;
-  close(s.fccr, 3534787.5 / ds, 1e-9);     // 1.37x
+  close(s.fccr, 3520537.5 / ds, 1e-9);     // 1.37x
   assert.equal(s.binding, "minimum equity rule");
 });
 
 test("stress test: +300bp lowers coverage", () => {
   const R = demo();
   const ds = 16589000 * (0.1225 + 0.05) + 213656.7603880705;
-  close(R.atAskStress.fccr, 3534787.5 / ds, 1e-9);   // 1.15x
+  close(R.atAskStress.fccr, 3520537.5 / ds, 1e-9);   // 1.14x
   assert.ok(R.atAskStress.fccr < R.atAsk.fccr);
 });
 
@@ -112,7 +114,7 @@ test("pricing rules: bid <= walk-away <= financeable max", () => {
   // At the financeable max the sponsor's equity check equals the cash available.
   const ctx = { platform: demoDeal().platform, A: DEFAULTS, cf: R.cf, eq: R.eq, syn: R.syn };
   close(E.structureAt(p.financeableMax, ctx).equity, 3000000, 1);
-  assert.equal(R.callClass, "red");          // demo ask (9.0M) is above walk-away (7.2M)
+  assert.equal(R.callClass, "red");          // demo ask (9.0M) is above walk-away (7.1M)
 });
 
 test("financing cap limits the walk-away when the platform is cash-poor", () => {
@@ -125,15 +127,15 @@ test("financing cap limits the walk-away when the platform is cash-poor", () => 
 
 test("value created: multiple arbitrage", () => {
   const R = demo();
-  close(R.value.atBid.arbitrage, 8.0 * 1388050 - R.prices.bidUpTo * 1.03, 1e-6);
-  close(R.value.atAsk.insideValue, 8.0 * (1388050 + R.syn.runRate), 1e-6);
+  close(R.value.atBid.arbitrage, 8.0 * 1369050 - R.prices.bidUpTo * 1.03, 1e-6);
+  close(R.value.atAsk.insideValue, 8.0 * (1369050 + R.syn.runRate), 1e-6);
 });
 
 test("monotonic: a bigger unsupported add-back never raises the bid by its full amount", () => {
   const d = demoDeal();
   d.target.addbacks.push({ desc: "Projected price increase", amount: 200000, category: "pro_forma" });
   const R = E.runAll(d, PRECEDENTS);
-  close(R.eq.adjusted - 1388050, 50000, 1e-6);   // only 25% accepted
+  close(R.eq.adjusted - 1369050, 50000, 1e-6);   // only 25% accepted
 });
 
 test("risk scorecard: top 3 diligence items are the worst red/yellow areas", () => {
@@ -149,4 +151,20 @@ test("precedent CSV: rows need industry, EV, a metric and a source URL", () => {
   assert.equal(deals[0].target, "A, Inc.");
   assert.equal(skipped.length, 2);
   assert.ok(PRECEDENTS.every(p => /^https?:\/\//.test(p.source)));
+});
+
+test("mispricing: EBITDA overstatement x the ask's multiple (the deck's unit of loss)", () => {
+  const { mispricing: m, toTest } = demo();
+  close(m.overstatement, 1530000 - 1369050, 1e-6);       // 160,950
+  close(m.askMultiple, 9000000 / 1530000, 1e-12);        // 5.88x on the seller's EBITDA
+  close(m.priceImpact, 160950 * 9000000 / 1530000, 1e-6); // ~$947K of overpayment
+  // Add-backs to test first: biggest claimed dollars first
+  assert.deepEqual(toTest.map(t => t.claimed), [125000, 60000, 52000]);
+});
+
+test("recurring one-time rule only applies to one-time items", () => {
+  const d = demoDeal();
+  d.target.addbacks = [{ desc: "x", amount: 100000, category: "personal", priorYear: true }];
+  const R = E.runAll(d, PRECEDENTS);
+  close(R.eq.acceptedTotal, 80000, 1e-6);   // personal stays at 80%
 });

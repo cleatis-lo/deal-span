@@ -32,11 +32,20 @@ export const INDUSTRIES = [
 
 // Share of each claimed add-back the tool accepts (assumption, anchored to Pioneer's QoE evidence).
 export const ADDBACK_RULES = {
-  one_time:      { label: "One-time / non-recurring", accept: 0.75, note: "Accepted with documentation; 'one-time' items that recur get rejected." },
+  one_time:      { label: "One-time / non-recurring", accept: 0.75, note: "Accepted with documentation. If it was also claimed last year, it's rejected: a cost that recurs isn't one-time." },
   personal:      { label: "Owner's personal expenses", accept: 0.80, note: "Needs receipts or GL detail; partial credit is common." },
   discretionary: { label: "Discretionary (donations, family on payroll)", accept: 0.90, note: "Usually accepted if clearly non-operating." },
   pro_forma:     { label: "Pro forma / run-rate (contracts not yet earned)", accept: 0.25, note: "Buyers and lenders rarely pay for earnings that haven't happened." },
   other:         { label: "Other / unsupported", accept: 0.50, note: "Unsupported adjustments get heavy haircuts." }
+};
+
+// What to ask the seller for, per add-back category (shown in "add-backs to test first").
+export const ADDBACK_TESTS = {
+  one_time: "Invoices or settlement documents, plus the GL for the prior 3 years to confirm it never recurred.",
+  personal: "Receipts and GL detail showing the expense is personal and stops at close.",
+  discretionary: "Payroll records and job duties; confirm the role doesn't need to be backfilled.",
+  pro_forma: "The signed contract, start date and expected margin. Price it as an earnout, not as EBITDA.",
+  other: "GL detail and a written explanation of why it won't recur."
 };
 
 export const DEFAULTS = {
@@ -77,7 +86,7 @@ export function demoDeal() {
         { desc: "Owner's personal vehicle & fuel", amount: 45000, category: "personal" },
         { desc: "Spouse on payroll (non-working)", amount: 52000, category: "discretionary" },
         { desc: "Run-rate: new school-district service contract", amount: 125000, category: "pro_forma" },
-        { desc: "Software migration (claimed one-time, 2nd year in a row)", amount: 38000, category: "other" }
+        { desc: "Software migration (also claimed as one-time last year)", amount: 38000, category: "one_time", priorYear: true }
       ],
       qual: {
         topCustomerPct: 0.14, top5CustomerPct: 0.33, ownerDependence: 4, recurringPct: 0.38,

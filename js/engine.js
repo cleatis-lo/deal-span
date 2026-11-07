@@ -3,7 +3,7 @@
 // Every output is a function of the inputs, a labeled rule, or a cited source.
 // Pure functions only (no DOM), so every formula is unit-tested in tests/.
 // ============================================================
-import { INDUSTRIES, ADDBACK_RULES } from "./data.js";
+import { INDUSTRIES, ADDBACK_RULES, ADDBACK_TESTS } from "./data.js";
 
 // ---------- helpers ----------
 export const sum = a => a.reduce((x, y) => x + (Number(y) || 0), 0);
@@ -44,7 +44,11 @@ export function analyzeEarnings(t, fin, A) {
   const items = t.addbacks.map(a => {
     const rule = ADDBACK_RULES[a.category] || ADDBACK_RULES.other;
     const claimed = Number(a.amount) || 0;
-    return { ...a, rule, claimed, accepted: claimed * rule.accept, cut: claimed * (1 - rule.accept) };
+    // Rule: a "one-time" item that was also claimed last year recurs, so none of it is accepted.
+    const recurring = a.category === "one_time" && !!a.priorYear;
+    const accept = recurring ? 0 : rule.accept;
+    return { ...a, rule, recurring, accept, claimed, accepted: claimed * accept, cut: claimed * (1 - accept),
+      ruleText: recurring ? "Claimed as one-time two years running, so rejected (0% accepted)." : `${rule.label}: ${Math.round(rule.accept * 100)}% accepted. ${rule.note}` };
   });
   const claimedTotal = sum(items.map(i => i.claimed));
   const acceptedTotal = sum(items.map(i => i.accepted));
@@ -246,11 +250,19 @@ export function runAll(d, precedents) {
   else if (ask <= walkAway) { call = "Ask is inside your walk-away but pays the seller for synergies. Negotiate toward the bid."; callClass = "yellow"; }
   else { call = ask > financeableMax && walkAway >= financeableMax ? "Ask is above what the platform can finance. Counter at the bid or walk." : "Ask is above your walk-away price. Counter at the bid or walk."; callClass = "red"; }
 
+  // The deck's unit of loss: EBITDA overstatement x the multiple the price implies.
+  // Ask multiple is measured on the seller's own EBITDA, since that's the number the ask is built on.
+  const askMultiple = eq.seller > 0 ? ask / eq.seller : 0;
+  const mispricing = { overstatement: eq.seller - eq.adjusted, askMultiple, priceImpact: (eq.seller - eq.adjusted) * askMultiple };
+  // Add-backs to test first: ranked by price at stake if the add-back turns out to be false (claimed x ask multiple).
+  const toTest = eq.items.filter(i => i.claimed > 0)
+    .map(i => ({ desc: i.desc, category: i.category, claimed: i.claimed, accepted: i.accepted, priceAtStake: i.claimed * askMultiple, test: ADDBACK_TESTS[i.category] || ADDBACK_TESTS.other, recurring: i.recurring }))
+    .sort((a, b) => b.priceAtStake - a.priceAtStake).slice(0, 3);
   const risk = analyzeRisk(t, fin, eq, val);
   const conditions = risk.top3.map(r => ({ area: r.area, rating: r.rating, ask: r.ask }));
 
   return {
-    fin, eq, val, syn, cf, risk, before,
+    fin, eq, val, syn, cf, risk, before, mispricing, toTest,
     prices: { ask, bidUpTo, walkAway, financeableMax, standalone: val.standalone },
     atAsk, atAskStress, atBid, atBidStress,
     value: { atAsk: valueCreated(ask, ctx), atBid: valueCreated(bidUpTo, ctx) },
